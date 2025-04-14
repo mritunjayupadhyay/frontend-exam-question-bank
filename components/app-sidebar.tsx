@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import * as React from "react"
@@ -10,7 +11,8 @@ import {
   PieChart,
   Send,
   Settings2,
-  SquareTerminal,
+  SidebarIcon,
+  PlusIcon
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -34,90 +36,21 @@ const data = {
   },
   navMain: [
     {
-      title: "Playground",
+      title: "Questions",
       url: "#",
-      icon: SquareTerminal,
+      icon: BookOpen,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "List Question",
+          url: "/questions",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
+          title: "Add Question",
+          url: "/add-question",
+        }
       ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
+    }
   ],
   navSecondary: [
     {
@@ -156,7 +89,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" className="top-[var(--header-height)] !h-[calc(100svh-var(--header-height))]" {...props}>
       <SidebarHeader>
         <Button className="h-8 w-8" variant="ghost" size="icon" onClick={toggleSidebar}>
-          B
+        <SidebarIcon />
         </Button>
       </SidebarHeader>
       <SidebarContent>
