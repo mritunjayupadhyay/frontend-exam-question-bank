@@ -15,7 +15,10 @@ const QuestionsPage = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="flex flex-col items-start gap-4 p-4 flex-1 self-stretch rounded-xl bg-surfaceContainerLow"
+    style={{ background: "var(--Schemes-Surface-Container-Low, #FBF8FD)" }}
+
+    >
       <h1 className="text-2xl font-bold mb-4">Questions</h1>
       <QuestionFilter />
       <QuestionList questions={questionsRes.data}  />
