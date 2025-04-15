@@ -1,18 +1,25 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { RootState } from '../store';
+import { IQuestion } from 'question-bank-interface';
 
-const initialState = {
-  selectedQuestionId: null,
+interface QuestionState {
+  selectedQuestion: IQuestion | null;
+}
+
+const initialState: QuestionState = {
+  selectedQuestion: null,
 };
 
 export const questionsSlice = createSlice({
-  name: 'posts',
+  name: 'questions',
   initialState,
   reducers: {
     selectQuestion: (state, action) => {
-      state.selectedQuestionId = action.payload;
+      state.selectedQuestion = action.payload;
     }
   },
 });
 
 export const { selectQuestion } = questionsSlice.actions;
+export const questionsState = (state: RootState) => state.questions;
 export default questionsSlice.reducer;

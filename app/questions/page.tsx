@@ -11,9 +11,14 @@ import {
 } from "@/components/ui/resizable";
 
 import { useQuestions } from "@/react-query-hooks/hooks/use-questions";
+import { useSelector } from "react-redux";
+import { questionsState } from "@/rtk/slices/question.slice";
 
 const QuestionsPage = () => {
+  const { selectedQuestion } = useSelector(questionsState);
+
   const { data: questionsRes, isLoading, error, refetch, status } = useQuestions();
+
   const [open, setOpen] = useState(false);
 
   if (isLoading) return <div>Loading...</div>;
@@ -37,8 +42,8 @@ const QuestionsPage = () => {
           <QuestionFilter />
           <QuestionList questions={questionsRes?.data || []} />
         </ResizablePanel>
-        {open ? <ResizableHandle /> : null}
-        {open ? <ResizablePanel>Two</ResizablePanel> : null}
+        {selectedQuestion?.id ? <ResizableHandle /> : null}
+        {selectedQuestion?.id ? <ResizablePanel>Two</ResizablePanel> : null}
       </ResizablePanelGroup>
     </div>
   );
