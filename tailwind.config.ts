@@ -14,6 +14,9 @@ const config: Config = {
       minWidth: {
         '1150': '1150px',
       },
+      fontFamily: {
+        'noto-sans': ['"Noto Sans"', 'sans-serif'],
+      },
     },
   },
 }

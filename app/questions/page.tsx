@@ -1,27 +1,45 @@
-'use client';
-import React from 'react';
-import QuestionFilter from '../../components/questions/question-filter';
-import QuestionList from '../../components/questions/question-list';
-import { useQuestions } from '@/react-query-hooks/hooks/use-questions';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+import React, { useState } from "react";
+import QuestionFilter from "../../components/questions/question-filter";
+import QuestionList from "../../components/questions/question-list";
+import Text from "../../components/common/text";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
+import { useQuestions } from "@/react-query-hooks/hooks/use-questions";
 
 const QuestionsPage = () => {
-  const { data: questionsRes, isLoading, error } = useQuestions();
+  const { data: questionsRes, isLoading, error, refetch, status } = useQuestions();
+  const [open, setOpen] = useState(false);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading questions</div>;
 
-  if (questionsRes?.error) {
-    return <div>Error: {questionsRes.error}</div>;
-  }
+  const handleClick = () => {
+    console.log("Clicked");
+    refetch();
+    // setOpen(!open);
+  };
 
   return (
-    <div className="flex flex-col items-start gap-4 p-4 flex-1 self-stretch rounded-xl bg-surfaceContainerLow"
-    style={{ background: "var(--Schemes-Surface-Container-Low, #FBF8FD)" }}
-
+    <div
+    onClick={() => handleClick()}
+      className="flex flex-col items-start gap-4 p-4 flex-1 self-stretch rounded-xl bg-surfaceContainerLow"
+      style={{ background: "var(--Schemes-Surface-Container-Low, #FBF8FD)" }}
     >
-      <h1 className="text-2xl font-bold mb-4">Questions</h1>
-      <QuestionFilter />
-      <QuestionList questions={questionsRes.data}  />
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel>
+          <Text >Questions</Text>
+          <QuestionFilter />
+          <QuestionList questions={questionsRes?.data || []} />
+        </ResizablePanel>
+        {open ? <ResizableHandle /> : null}
+        {open ? <ResizablePanel>Two</ResizablePanel> : null}
+      </ResizablePanelGroup>
     </div>
   );
 };
