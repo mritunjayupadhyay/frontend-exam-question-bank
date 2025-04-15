@@ -13,6 +13,7 @@ import {
 import { useQuestions } from "@/react-query-hooks/hooks/use-questions";
 import { useSelector } from "react-redux";
 import { questionsState } from "@/rtk/slices/question.slice";
+import QuestionView from "@/components/questions/question-view";
 
 const QuestionsPage = () => {
   const { selectedQuestion } = useSelector(questionsState);
@@ -38,12 +39,14 @@ const QuestionsPage = () => {
     >
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
-          <Text >Questions</Text>
+          <Text>Questions</Text>
           <QuestionFilter />
           <QuestionList questions={questionsRes?.data || []} />
         </ResizablePanel>
         {selectedQuestion?.id ? <ResizableHandle /> : null}
-        {selectedQuestion?.id ? <ResizablePanel>Two</ResizablePanel> : null}
+        {selectedQuestion?.id ? <ResizablePanel>
+          <QuestionView />
+        </ResizablePanel> : null}
       </ResizablePanelGroup>
     </div>
   );
