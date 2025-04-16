@@ -11,8 +11,8 @@ interface ITextProps {
 const textStyles = {
   lightText: "font-noto-sans text-gray-500 text-sm",
   boldText: "text-black font-noto-sans font-medium text-sm",
-  "section-header": "text-black font-noto-sans text-2xl font-medium", // Using text-2xl instead of text-[22px]
-  text: "text-black font-noto-sans text-2xl font-medium", // Default style same as section-header
+  "section-header": "text-black font-noto-sans text-xl font-medium", 
+  text: "text-black font-noto-sans text-2xl font-medium", // Default style 
 };
 
 const Text: React.FC<ITextProps> = ({ 

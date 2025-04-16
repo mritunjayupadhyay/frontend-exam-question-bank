@@ -39,9 +39,11 @@ const QuestionsPage = () => {
     >
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
-          <Text>Questions</Text>
+          <div className="flex flex-col items-start gap-4 flex-1 self-stretch">
+          <Text type="section-header">Question List</Text>
           <QuestionFilter />
           <QuestionList questions={questionsRes?.data || []} />
+          </div>
         </ResizablePanel>
         {selectedQuestion?.id ? <ResizableHandle /> : null}
         {selectedQuestion?.id ? <ResizablePanel>
