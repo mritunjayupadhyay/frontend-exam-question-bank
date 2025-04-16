@@ -16,6 +16,7 @@ const config: Config = {
       },
       fontFamily: {
         'noto-sans': ['"Noto Sans"', 'sans-serif'],
+        'inter': ['Inter', 'sans-serif'],
       },
     },
   },

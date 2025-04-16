@@ -3,12 +3,13 @@ import classNames from 'classnames'; // Assuming classNames library is installed
 
 interface ITextProps {
   children: React.ReactNode;
-  type?: "section-header" | "boldText" | "text";
+  type?: "section-header" | "boldText" | "lightText" | "text" ;
   style?: React.CSSProperties;
   className?: string; // Renamed from classNames to follow convention
 }
 
 const textStyles = {
+  lightText: "font-noto-sans text-gray-500 text-sm",
   boldText: "text-black font-noto-sans font-medium text-sm",
   "section-header": "text-black font-noto-sans text-2xl font-medium", // Using text-2xl instead of text-[22px]
   text: "text-black font-noto-sans text-2xl font-medium", // Default style same as section-header
