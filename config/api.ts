@@ -5,5 +5,11 @@ export const ENDPOINTS = {
     FULL_INFO: (id: string) => `${API_BASE_URL}/qs/questions/${id}/full`,
     LIST: `${API_BASE_URL}/qs/questions/filter`,
     // Add other endpoints here
+  },
+  SUBJECTS: {
+    LIST: `${API_BASE_URL}/qs/subjects`,
+  },
+  CLASSES: {
+    LIST: `${API_BASE_URL}/qs/classes`,
   }
 };

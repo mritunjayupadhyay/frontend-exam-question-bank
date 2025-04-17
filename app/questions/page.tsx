@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import QuestionFilter from "../../components/questions/question-filter";
 import QuestionList from "../../components/questions/question-list";
 import Text from "../../components/common/text";
@@ -13,13 +13,21 @@ import {
 import { useQuestions } from "@/react-query-hooks/hooks/use-questions";
 import { useSelector } from "react-redux";
 import { questionsState } from "@/rtk/slices/question.slice";
+import { classSubjectState } from "@/rtk/slices/classSubject.slice";
 import QuestionView from "@/components/questions/question-view";
 import GetClassSubject from "@/components/questions/get-claas-subject";
 
 const QuestionsPage = () => {
-  const [subject, setSubject] = useState("");
+  const [showQuestion, setShowQuestion] = useState(false);
   // Redux store
   const { selectedQuestion } = useSelector(questionsState);
+  const { classId, subjectId } = useSelector(classSubjectState);
+
+  useEffect(() => {
+    if (classId && subjectId) {
+      setShowQuestion(true);
+    }
+  }, [classId, subjectId]);
 
   // React Query
   const {
@@ -49,7 +57,7 @@ const QuestionsPage = () => {
     >
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
-          {!!subject ? <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
+          {showQuestion ? <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
             <Text type="section-header">Question List</Text>
             <QuestionFilter />
             <QuestionList questions={questionsRes?.data || []} />

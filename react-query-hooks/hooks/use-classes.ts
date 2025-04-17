@@ -4,7 +4,7 @@ import { IName } from "question-bank-interface";
 
 const fetchSubjects = async (): Promise<{data: IName[], error: boolean}> => {
     try {
-      const url = ENDPOINTS.SUBJECTS.LIST;
+      const url = ENDPOINTS.CLASSES.LIST;
       const res = await fetch(url);
       
       if (!res.ok) {
@@ -21,9 +21,9 @@ const fetchSubjects = async (): Promise<{data: IName[], error: boolean}> => {
     }
 };
 
-export function useSubjects() {
+export function useClasses() {
     return useQuery<{data: IName[], error: boolean}, Error>({
-        queryKey: ['subjects'],
+        queryKey: ['classes'],
         queryFn: fetchSubjects,
         staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
