@@ -9,6 +9,9 @@ export const ENDPOINTS = {
   SUBJECTS: {
     LIST: `${API_BASE_URL}/qs/subjects`,
   },
+  TOPICS: {
+    LIST: (id: string) => `${API_BASE_URL}/qs/topics/subject/${id}`,
+  },
   CLASSES: {
     LIST: `${API_BASE_URL}/qs/classes`,
   }

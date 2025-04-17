@@ -1,10 +1,20 @@
-import React, { memo, useState } from 'react';
-import { ILabelValue } from 'question-bank-interface';
-import { Check, PlusCircle } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '../ui/command';
-import { cn } from '@/lib/utils';
+import React, { memo, useState } from "react";
+import { ILabelValue } from "question-bank-interface";
+import { Check, PlusCircle } from "lucide-react";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "../ui/command";
+import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
+import { Separator } from "../ui/separator";
 
 interface ISearchableSelectProps {
   options: ILabelValue[];
@@ -12,23 +22,23 @@ interface ISearchableSelectProps {
   onChange: (values: string[]) => void;
 }
 
-const SearchableSelect: React.FC<ISearchableSelectProps> = ({ 
+const SearchableSelect: React.FC<ISearchableSelectProps> = ({
   options,
-    title,
-    onChange,
+  title,
+  onChange,
 }: ISearchableSelectProps) => {
-    const [selectedValues, setSelectedValues] = useState(new Set<string>());
+  const [selectedValues, setSelectedValues] = useState(new Set<string>());
   console.log("SearchableSelect", { options, title, onChange });
   const handleSelection = (value: string) => {
     const updatedSelection = new Set<string>(selectedValues);
-    
+
     // Toggle selection
     if (updatedSelection.has(value)) {
       updatedSelection.delete(value);
     } else {
       updatedSelection.add(value);
     }
-    
+
     setSelectedValues(updatedSelection);
     onChange([...updatedSelection]); // Convert to array when passing to parent
   };
@@ -42,16 +52,49 @@ const SearchableSelect: React.FC<ISearchableSelectProps> = ({
         <Button variant="outline" size="sm" className="h-8 border-dashed">
           <PlusCircle />
           {title}
-          </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0" align="start">
+          {selectedValues?.size > 0 && (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Badge
+                variant="secondary"
+                className="rounded-sm px-1 font-normal lg:hidden"
+              >
+                {selectedValues.size}
+              </Badge>
+              <div className="hidden space-x-1 lg:flex">
+                {selectedValues.size > 2 ? (
+                  <Badge
+                    variant="secondary"
+                    className="rounded-sm px-1 font-normal"
+                  >
+                    {selectedValues.size} selected
+                  </Badge>
+                ) : (
+                  options
+                    .filter((option) => selectedValues.has(option.value))
+                    .map((option) => (
+                      <Badge
+                        variant="secondary"
+                        key={option.value}
+                        className="rounded-sm px-1 font-normal"
+                      >
+                        {option.label}
+                      </Badge>
+                    ))
+                )}
+              </div>
+            </>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0" align="start">
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
-                const isSelected = selectedValues.has(option.value)
+                const isSelected = selectedValues.has(option.value);
                 return (
                   <CommandItem
                     key={option.value}
@@ -77,7 +120,7 @@ const SearchableSelect: React.FC<ISearchableSelectProps> = ({
                       </span>
                     )} */}
                   </CommandItem>
-                )
+                );
               })}
             </CommandGroup>
             {selectedValues.size > 0 && (
