@@ -1,14 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../store';
+import { IName } from 'question-bank-interface';
 
 interface ClassSubjectState {
-  subjectId: string | null;
-  classId: string | null;
+  subject: IName | null;
+  className: IName | null;
 }
 
 const initialState: ClassSubjectState = {
-  subjectId: null,
-    classId: null,
+    subject: null,
+    className: null,
 };
 
 export const classSubjectSlice = createSlice({
@@ -16,10 +17,10 @@ export const classSubjectSlice = createSlice({
   initialState,
   reducers: {
     setClass: (state, action) => {
-      state.classId = action.payload;
+      state.className = action.payload;
     },
     setSubject: (state, action) => {
-      state.subjectId = action.payload;
+      state.subject = action.payload;
     }
   },
 });

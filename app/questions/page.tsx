@@ -16,18 +16,24 @@ import { questionsState } from "@/rtk/slices/question.slice";
 import { classSubjectState } from "@/rtk/slices/classSubject.slice";
 import QuestionView from "@/components/questions/question-view";
 import GetClassSubject from "@/components/questions/get-claas-subject";
+import { IQuestionFilter } from "question-bank-interface";
 
 const QuestionsPage = () => {
   const [showQuestion, setShowQuestion] = useState(false);
   // Redux store
   const { selectedQuestion } = useSelector(questionsState);
-  const { classId, subjectId } = useSelector(classSubjectState);
+  const { className, subject } = useSelector(classSubjectState);
+  const filter:IQuestionFilter = {
+    classId: className?.id,
+    subjectId: subject?.id,
+  };
+  
 
   useEffect(() => {
-    if (classId && subjectId) {
+    if (className?.id && subject?.id) {
       setShowQuestion(true);
     }
-  }, [classId, subjectId]);
+  }, [className, subject]);
 
   // React Query
   const {
@@ -36,7 +42,7 @@ const QuestionsPage = () => {
     error,
     refetch,
     status,
-  } = useQuestions();
+  } = useQuestions(filter);
 
   const [open, setOpen] = useState(false);
 
@@ -58,7 +64,7 @@ const QuestionsPage = () => {
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
           {showQuestion ? <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
-            <Text type="section-header">Question List</Text>
+            <Text type="section-header">Questions of {subject?.name} for Class {className?.name} </Text>
             <QuestionFilter />
             <QuestionList questions={questionsRes?.data || []} />
           </div> : <GetClassSubject />}

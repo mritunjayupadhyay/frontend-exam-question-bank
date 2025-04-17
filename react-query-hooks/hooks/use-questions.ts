@@ -1,13 +1,15 @@
 'use client';
-import { IQuestion, IQuestionFullDetails } from 'question-bank-interface';
+import { IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-interface';
 import { useQuery } from '@tanstack/react-query';
 import { ENDPOINTS } from '@/config/api';
+import { getQueryParams } from '@/utils/getQueryParams.util';
 
 // Simulated API function
-const fetchQuestions = async (): Promise<{data: IQuestion[], error: boolean}> => {
+const fetchQuestions = async (filter: IQuestionFilter): Promise<{data: IQuestion[], error: boolean}> => {
     try {
       const url = ENDPOINTS.QUESTIONS.LIST;
-      const res = await fetch(url);
+      const queryParams = getQueryParams(filter);
+      const res = await fetch(queryParams ? `${url}?${queryParams}` : url);
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
@@ -48,10 +50,10 @@ const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
   }
 }
 
-export function useQuestions() {
+export function useQuestions(filter: IQuestionFilter) {
     return useQuery<{data: IQuestion[], error: boolean}, Error>({
-        queryKey: ['questions'],
-        queryFn: fetchQuestions,
+        queryKey: ['questions', filter],
+        queryFn: () => fetchQuestions(filter),
         staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

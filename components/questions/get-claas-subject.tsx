@@ -16,11 +16,11 @@ export default function GetClassSubject() {
   useEffect(() => {
     if (subjects?.data && subjects?.data?.length > 0) {
       console.log("Subjects: ", subjects.data);
-      dispatch(setClass(subjects.data[0].id));
+      dispatch(setSubject(subjects.data[0]));
     }
     if (classes?.data && classes?.data?.length > 0) {
       console.log("Classes: ", classes.data);
-      dispatch(setSubject(classes.data[0].id));
+      dispatch(setClass(classes.data[0]));
     }
   }, [subjects, classes, dispatch]);
   return (
