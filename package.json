@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:prod-api": "NODE_ENV=development NEXT_PUBLIC_API_ENV=production next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

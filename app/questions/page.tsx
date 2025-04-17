@@ -14,11 +14,21 @@ import { useQuestions } from "@/react-query-hooks/hooks/use-questions";
 import { useSelector } from "react-redux";
 import { questionsState } from "@/rtk/slices/question.slice";
 import QuestionView from "@/components/questions/question-view";
+import GetClassSubject from "@/components/questions/get-claas-subject";
 
 const QuestionsPage = () => {
+  const [subject, setSubject] = useState("");
+  // Redux store
   const { selectedQuestion } = useSelector(questionsState);
 
-  const { data: questionsRes, isLoading, error, refetch, status } = useQuestions();
+  // React Query
+  const {
+    data: questionsRes,
+    isLoading,
+    error,
+    refetch,
+    status,
+  } = useQuestions();
 
   const [open, setOpen] = useState(false);
 
@@ -33,22 +43,24 @@ const QuestionsPage = () => {
 
   return (
     <div
-    onClick={() => handleClick()}
+      onClick={() => handleClick()}
       className="flex flex-col items-start gap-4 p-4 flex-1 self-stretch rounded-xl bg-surfaceContainerLow"
       style={{ background: "var(--Schemes-Surface-Container-Low, #FBF8FD)" }}
     >
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
-          <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
-          <Text type="section-header">Question List</Text>
-          <QuestionFilter />
-          <QuestionList questions={questionsRes?.data || []} />
-          </div>
+          {!!subject ? <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
+            <Text type="section-header">Question List</Text>
+            <QuestionFilter />
+            <QuestionList questions={questionsRes?.data || []} />
+          </div> : <GetClassSubject />}
         </ResizablePanel>
         {selectedQuestion?.id ? <ResizableHandle /> : null}
-        {selectedQuestion?.id ? <ResizablePanel>
-          <QuestionView />
-        </ResizablePanel> : null}
+        {selectedQuestion?.id ? (
+          <ResizablePanel>
+            <QuestionView />
+          </ResizablePanel>
+        ) : null}
       </ResizablePanelGroup>
     </div>
   );

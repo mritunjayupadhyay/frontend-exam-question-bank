@@ -6,7 +6,7 @@ import QuestionCard from "./question-card";
 
 const QuestionList = ({ questions }: { questions: IQuestion[] }) => {
   return (
-    <ScrollArea className="w-full" style={{ height: "calc(100svh - 250px)" }}>
+    <ScrollArea className="w-full" style={{ height: "calc(100svh - 260px)" }}>
       <div className="flex flex-col gap-2 p-4 pt-0">
         {questions.map((item) => (
           <QuestionCard key={item.id} question={item} />

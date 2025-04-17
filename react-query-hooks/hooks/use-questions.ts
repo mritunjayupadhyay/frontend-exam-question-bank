@@ -1,11 +1,13 @@
 'use client';
 import { IQuestion, IQuestionFullDetails } from 'question-bank-interface';
 import { useQuery } from '@tanstack/react-query';
+import { ENDPOINTS } from '@/config/api';
 
 // Simulated API function
 const fetchQuestions = async (): Promise<{data: IQuestion[], error: boolean}> => {
     try {
-      const res = await fetch('http://localhost:8000/local/ex-p/questions/filter');
+      const url = ENDPOINTS.QUESTIONS.LIST;
+      const res = await fetch(url);
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
@@ -23,7 +25,7 @@ const fetchQuestions = async (): Promise<{data: IQuestion[], error: boolean}> =>
 
 const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
   try {
-    const url = `http://localhost:8000/local/ex-p/questions/${id}/full`
+    const url = ENDPOINTS.QUESTIONS.FULL_INFO(id);
     const res = await fetch(url);
       
       if (!res.ok) {
