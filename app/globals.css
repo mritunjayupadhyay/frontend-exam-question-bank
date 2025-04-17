@@ -80,6 +80,7 @@
   --surface-variant: #E0E1F6;
   --surface-container: #F3F0F4;
   --surface-container-low: #FBF8FD;
+  --scheme-primary: #0743FF;
 }
 
 .dark {

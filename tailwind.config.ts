@@ -10,6 +10,7 @@ const config: Config = {
         surfaceVariant: 'var(--surface-variant)',
         surfaceContainer: 'var(--surface-container)',
         surfaceContainerLow: 'var(--surface-container-low)',
+        schemePrimary: 'var(--scheme-primary)',
       },
       minWidth: {
         '1150': '1150px',
