@@ -18,7 +18,7 @@ export default function QuestionFilter() {
     console.log({handleAllQuestionTypes: values});
   };
   return (
-    <div className="mb-4">
+    <div className="mb-4 w-full">
       <SearchableSelect
         options={allQuestionTypes}
         title="Question Type"

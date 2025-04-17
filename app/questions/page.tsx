@@ -39,7 +39,7 @@ const QuestionsPage = () => {
     >
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
-          <div className="flex flex-col items-start gap-4 flex-1 self-stretch">
+          <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
           <Text type="section-header">Question List</Text>
           <QuestionFilter />
           <QuestionList questions={questionsRes?.data || []} />

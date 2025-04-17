@@ -40,7 +40,7 @@ export default function RootLayout({
                 <div className="flex flex-1">
                   <AppSidebar />
                   <SidebarInset>
-                    <div className="flex flex-1 flex-col gap-4 p-4 bg-surfaceContainer"
+                    <div className="flex flex-1 flex-col gap-4 p-4 bg-surfaceContainer h-[calc(100svh-var(--header-height))]"
                       style={{ background: "var(--Schemes-Surface-Container, #F3F0F4)" }}
                     >
                       {children}
