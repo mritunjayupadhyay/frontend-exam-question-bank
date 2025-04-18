@@ -52,7 +52,7 @@ export default function QuestionFilter() {
         
         <div className="flex-1 flex justify-end items-center gap-2">
         <Text type="lightText">Diffuculty Level</Text>
-          <div className="w-[200px]"><TwoThumbSlider min={0} max={10} onChange={() => {}} /></div>
+          <div className="w-[300px]"><TwoThumbSlider min={0} max={10} onChange={() => {}} /></div>
         </div>
       </div>
       <div className="flex w-full justify-end gap-2 items-center">

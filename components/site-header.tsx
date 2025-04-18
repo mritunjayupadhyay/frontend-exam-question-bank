@@ -22,7 +22,7 @@ export function SiteHeader() {
     style={{ background: "var(--Schemes-Surface, #FBF8FD);" }}
     >
       <div className="flex h-(--header-height) w-full items-center gap-2 px-4">
-        <p style={{ color: '#0055A6', fontSize: 30, fontWeight: 'bold'}}>Question Bank</p>
+        <p style={{ color: '#0055A6', display: 'none', fontSize: 30, fontWeight: 'bold'}}>Question Bank</p>
       </div>
     </header>
   )
