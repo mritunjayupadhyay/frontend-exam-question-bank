@@ -17,13 +17,16 @@ import { classSubjectState } from "@/rtk/slices/classSubject.slice";
 import QuestionView from "@/components/questions/question-view";
 import GetClassSubject from "@/components/questions/get-claas-subject";
 import { IQuestionFilter } from "question-bank-interface";
+import { questionsFilterState } from "@/rtk/slices/question.filter.slice";
 
 const QuestionsPage = () => {
   const [showQuestion, setShowQuestion] = useState(false);
   // Redux store
   const { selectedQuestion } = useSelector(questionsState);
   const { className, subject } = useSelector(classSubjectState);
+  const questionFilter = useSelector(questionsFilterState);
   const filter:IQuestionFilter = {
+    ...questionFilter,
     classId: className?.id,
     subjectId: subject?.id,
   };

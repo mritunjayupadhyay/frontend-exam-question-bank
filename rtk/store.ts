@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import questionsReducer from './slices/question.slice';
 import classSubjectReducer from './slices/classSubject.slice';
+import questionsFilterReducer from './slices/question.filter.slice';
 
 export const store = configureStore({
   reducer: {
     questions: questionsReducer,
     classSubject: classSubjectReducer,
+    questionsFilter: questionsFilterReducer,
   },
 })
 
