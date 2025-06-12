@@ -1,13 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 
-interface UploadUrlResponse {
+export interface UploadUrlResponse {
   uploadURL: string;
   fileKey: string;
   bucketName: string;
   fileURL: string;
 }
 
-interface UploadUrlParams {
+export interface UploadUrlParams {
   fileName: string;
   fileType: string;
 }

@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useForm } from "react-hook-form";
 import { Textarea } from '@/components/ui/textarea';
+import { FileUploader } from '@/components/upload/basic-upload';
 
 const formSchema = z.object({
   questionText: z.string().min(2),
@@ -53,6 +54,7 @@ export default function QuestionForm() {
             </FormItem>
           )}
         />
+        <FileUploader />
         <Button type="submit">Submit</Button>
       </form>
     </Form>
