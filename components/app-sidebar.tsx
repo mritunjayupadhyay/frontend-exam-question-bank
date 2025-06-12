@@ -47,7 +47,7 @@ const data = {
         },
         {
           title: "Add Question",
-          url: "/add-question",
+          url: "/questions/create",
         }
       ],
     }
