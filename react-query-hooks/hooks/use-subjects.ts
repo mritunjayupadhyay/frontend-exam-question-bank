@@ -1,11 +1,18 @@
 import { ENDPOINTS } from "@/config/api";
+import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { IName } from "question-bank-interface";
 
-const fetchSubjects = async (): Promise<{data: IName[], error: boolean}> => {
+const fetchSubjects = async (getToken: () => Promise<string | null>): Promise<{data: IName[], error: boolean}> => {
     try {
+       const token = await getToken();
       const url = ENDPOINTS.SUBJECTS.LIST;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
@@ -22,9 +29,10 @@ const fetchSubjects = async (): Promise<{data: IName[], error: boolean}> => {
 };
 
 export function useSubjects() {
+  const { getToken } = useAuth(); // Add this
     return useQuery<{data: IName[], error: boolean}, Error>({
         queryKey: ['subjects'],
-        queryFn: fetchSubjects,
+        queryFn: () => fetchSubjects(getToken),
         staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
     });

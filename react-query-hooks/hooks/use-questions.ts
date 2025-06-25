@@ -8,7 +8,7 @@ import { useAuth } from '@clerk/nextjs';
 // Simulated API function
 const fetchQuestions = async (
   filter: IQuestionFilter,
-  getToken: () => Promise<string | undefined>
+  getToken: () => Promise<string | null>
 ): Promise<{data: IQuestion[], error: boolean}> => {
     try {
       // Get the JWT token
@@ -64,14 +64,9 @@ const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
 export function useQuestions(filter: IQuestionFilter) {
   const { getToken } = useAuth(); // Add this
   
-  const getTokenWrapper = async (): Promise<string | undefined> => {
-    const token = await getToken();
-    return token === null ? undefined : token;
-  };
-  
   return useQuery<{data: IQuestion[], error: boolean}, Error>({
       queryKey: ['questions', filter],
-      queryFn: () => fetchQuestions(filter, getTokenWrapper),
+      queryFn: () => fetchQuestions(filter, getToken),
       staleTime: 1000 * 60 * 5, // 5 minutes
       refetchOnWindowFocus: false,
   });
