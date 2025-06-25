@@ -3,13 +3,24 @@ import { IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-
 import { useQuery } from '@tanstack/react-query';
 import { ENDPOINTS } from '@/config/api';
 import { getQueryParams } from '@/utils/getQueryParams.util';
+import { useAuth } from '@clerk/nextjs';
 
 // Simulated API function
-const fetchQuestions = async (filter: IQuestionFilter): Promise<{data: IQuestion[], error: boolean}> => {
+const fetchQuestions = async (
+  filter: IQuestionFilter,
+  getToken: () => Promise<string | undefined>
+): Promise<{data: IQuestion[], error: boolean}> => {
     try {
+      // Get the JWT token
+    const token = await getToken();
       const url = ENDPOINTS.QUESTIONS.LIST;
       const queryParams = getQueryParams(filter);
-      const res = await fetch(queryParams ? `${url}?${queryParams}` : url);
+      const res = await fetch(queryParams ? `${url}?${queryParams}` : url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
@@ -51,12 +62,19 @@ const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
 }
 
 export function useQuestions(filter: IQuestionFilter) {
-    return useQuery<{data: IQuestion[], error: boolean}, Error>({
-        queryKey: ['questions', filter],
-        queryFn: () => fetchQuestions(filter),
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        refetchOnWindowFocus: false,
-    });
+  const { getToken } = useAuth(); // Add this
+  
+  const getTokenWrapper = async (): Promise<string | undefined> => {
+    const token = await getToken();
+    return token === null ? undefined : token;
+  };
+  
+  return useQuery<{data: IQuestion[], error: boolean}, Error>({
+      queryKey: ['questions', filter],
+      queryFn: () => fetchQuestions(filter, getTokenWrapper),
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+  });
 }
 
 export function useQuestion(id?: string) {
