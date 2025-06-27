@@ -3,38 +3,10 @@ import { IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-
 import { useQuery } from '@tanstack/react-query';
 import { ENDPOINTS } from '@/config/api';
 import { getQueryParams } from '@/utils/getQueryParams.util';
-import { useAuth } from '@clerk/nextjs';
+import { useAuthenticatedFetch } from './use-authenticated-fetch';
+import { createAuthenticatedFetch } from '../authenticated-api-handler';
 
 // Simulated API function
-const fetchQuestions = async (
-  filter: IQuestionFilter,
-  getToken: () => Promise<string | null>
-): Promise<{data: IQuestion[], error: boolean}> => {
-    try {
-      // Get the JWT token
-    const token = await getToken();
-      const url = ENDPOINTS.QUESTIONS.LIST;
-      const queryParams = getQueryParams(filter);
-      const res = await fetch(queryParams ? `${url}?${queryParams}` : url, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        console.error('Failed to fetch questions', { status: res.status, errorData });
-        throw new Error(`Failed to fetch questions: ${res.status}`);
-      }
-      
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching questions:', error);
-      throw error;
-    }
-};
 
 const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
   try {
@@ -61,14 +33,24 @@ const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
   }
 }
 
+const fetchQuestions = async (
+  filter: IQuestionFilter,
+  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch>
+): Promise<{data: IQuestion[], error: boolean}> => {
+  const url = ENDPOINTS.QUESTIONS.LIST;
+  const queryParams = getQueryParams(filter);
+  return authenticatedFetch(queryParams ? `${url}?${queryParams}` : url);
+};
+
 export function useQuestions(filter: IQuestionFilter) {
-  const { getToken } = useAuth(); // Add this
+  const authenticatedFetch = useAuthenticatedFetch(); // ✅ Clean and reusable
   
   return useQuery<{data: IQuestion[], error: boolean}, Error>({
-      queryKey: ['questions', filter],
-      queryFn: () => fetchQuestions(filter, getToken),
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false,
+    queryKey: ['questions', filter],
+    queryFn: () => fetchQuestions(filter, authenticatedFetch),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    enabled: !!(filter.classId && filter.subjectId),
   });
 }
 
