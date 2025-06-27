@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPresignedUrl } from './use-getPresignedUrl';
 import { createAuthenticatedFetch } from '../authenticated-api-handler';
 import { useAuthenticatedFetch } from './use-authenticated-fetch';
+import { TBucketName } from '@/lib/uploads/uploadBucket';
 
 // Types
 export interface UploadProgress {
@@ -20,6 +21,8 @@ export interface UploadToS3Params {
 
 export interface UploadFileParams {
   file: File;
+  bucketName?: TBucketName; // Default bucket name
+  folder?: string; // Optional folder within the bucket
   onProgress?: (progress: UploadProgress) => void;
   signal?: AbortSignal;
 }
@@ -147,6 +150,8 @@ const uploadToS3 = async ({
 // Main function to upload file with comprehensive error handling
 const uploadFileToS3 = async ({ 
   file, 
+  bucketName = 'question', // Default bucket name
+  folder = '', // Default folder
   onProgress, 
   signal,
   authenticatedFetch // Add this parameter
@@ -173,8 +178,8 @@ const uploadFileToS3 = async ({
     const presignedUrlData = await getPresignedUrl({
       fileName: file.name,
       fileType: file.type,
-      appName: 'question', // Specify your app name here
-      folder: 'optional-folder' // Specify your folder here if needed
+      appName: bucketName, // Specify your app name here
+      folder: folder // Specify your folder here if needed
     }, authenticatedFetch);
 
     console.log('Presigned URL Data:', {
@@ -229,7 +234,10 @@ const uploadFileToS3 = async ({
 };
 
 // React Query hook for single file upload
-const useUploadFile = (validationOptions?: FileValidationOptions) => {
+const useUploadFile = (
+  bucketName: TBucketName = 'question',
+  folder: string,
+  validationOptions?: FileValidationOptions) => {
   const queryClient = useQueryClient();
   const authenticatedFetch = useAuthenticatedFetch();
   
@@ -240,7 +248,7 @@ const useUploadFile = (validationOptions?: FileValidationOptions) => {
         validateFile(file, validationOptions);
       }
       
-      return uploadFileToS3({ file, onProgress, signal, authenticatedFetch });
+      return uploadFileToS3({ file, bucketName, folder,  onProgress, signal, authenticatedFetch });
     },
     onSuccess: (fileURL, variables) => {
       console.log('File uploaded successfully:', fileURL, variables);
@@ -336,7 +344,7 @@ const useUploadMultipleFiles = (validationOptions?: FileValidationOptions) => {
 
 // Utility hook for cancellable uploads
 const useCancellableUpload = (validationOptions?: FileValidationOptions) => {
-  const uploadMutation = useUploadFile(validationOptions);
+  const uploadMutation = useUploadFile('question', '', validationOptions);
   
   const uploadWithCancellation = (file: File, onProgress?: (progress: UploadProgress) => void) => {
     const abortController = new AbortController();

@@ -4,11 +4,15 @@ import { UploadProgress, useUploadFile } from '@/react-query-hooks/hooks/use-upl
 export const FileUploader = () => {
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   
-  const uploadMutation = useUploadFile({
-    maxSize: 5 * 1024 * 1024, // 5MB
-    allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
-    allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf']
-  });
+  const uploadMutation = useUploadFile(
+    'question', // Specify the bucket name
+    '', // Specify the folder if needed, otherwise leave empty
+    {
+      maxSize: 5 * 1024 * 1024, // 5MB
+      allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf']
+    }
+  );
 
   const handleUpload = async (file: File) => {
     try {
