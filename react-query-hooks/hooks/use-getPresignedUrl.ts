@@ -1,51 +1,52 @@
 import { useMutation } from '@tanstack/react-query';
+import { createAuthenticatedFetch } from '../authenticated-api-handler';
+import { useAuth } from '@clerk/nextjs';
 
 export interface UploadUrlResponse {
   uploadURL: string;
   fileKey: string;
   bucketName: string;
   fileURL: string;
+  appName: string;
 }
 
 export interface UploadUrlParams {
   fileName: string;
   fileType: string;
+  appName: string; // New field to specify which app
+  folder?: string; // Optional subfolder within the app bucket
 }
 
 // API functions for different actions
 const runtime = 'edge';
 
 // Get presigned URL from Lambda function
-const getPresignedUrl = async ({ fileName, fileType }: UploadUrlParams): Promise<UploadUrlResponse> => {
+const getPresignedUrl = async ({ fileName, fileType, appName, folder }: UploadUrlParams,
+  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch>
+): Promise<UploadUrlResponse> => {
   if (!process.env.NEXT_PUBLIC_UPLOAD_URL) {
     throw new Error('NEXT_PUBLIC_UPLOAD_URL environment variable is not defined');
   }
   
-  const response = await fetch(`${process.env.NEXT_PUBLIC_UPLOAD_URL}/generate-upload-url`, {
+  return authenticatedFetch(`${process.env.NEXT_PUBLIC_UPLOAD_URL}/generate-upload-url`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       fileName,
-      fileType
+      fileType,
+      appName,
+      folder: folder || '', // Default to empty string if not provided
     })
   });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to get upload URL: ${response.statusText}`);
-  }
-  
-  return await response.json() as UploadUrlResponse;
 };
 
 // React Query hook for getting presigned URL
-export const useGetPresignedUrl = () => {  
+export const useGetPresignedUrl = () => {
+  const { getToken } = useAuth();
+  const authenticatedFetch = createAuthenticatedFetch(getToken);
+  
   return useMutation({
-    mutationFn: getPresignedUrl,
+    mutationFn: (params: UploadUrlParams) => getPresignedUrl(params, authenticatedFetch),
     onSuccess: (data) => {
-      // Optionally invalidate related queries or update cache
-      // queryClient.invalidateQueries({ queryKey: ['uploads'] });
       console.log('Presigned URL generated successfully:', data.uploadURL);
     },
     onError: (error) => {
@@ -53,5 +54,6 @@ export const useGetPresignedUrl = () => {
     },
   });
 };
+
 
 export { runtime, getPresignedUrl };

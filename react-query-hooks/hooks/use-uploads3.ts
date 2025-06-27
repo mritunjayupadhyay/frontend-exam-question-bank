@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPresignedUrl } from './use-getPresignedUrl';
+import { createAuthenticatedFetch } from '../authenticated-api-handler';
+import { useAuthenticatedFetch } from './use-authenticated-fetch';
 
 // Types
 export interface UploadProgress {
@@ -146,8 +148,11 @@ const uploadToS3 = async ({
 const uploadFileToS3 = async ({ 
   file, 
   onProgress, 
-  signal 
-}: UploadFileParams): Promise<string> => {
+  signal,
+  authenticatedFetch // Add this parameter
+}: UploadFileParams & { 
+  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch> 
+}): Promise<string> => {
   try {
     // Phase 1: Initialize
     onProgress?.({
@@ -167,8 +172,10 @@ const uploadFileToS3 = async ({
 
     const presignedUrlData = await getPresignedUrl({
       fileName: file.name,
-      fileType: file.type
-    });
+      fileType: file.type,
+      appName: 'question', // Specify your app name here
+      folder: 'optional-folder' // Specify your folder here if needed
+    }, authenticatedFetch);
 
     console.log('Presigned URL Data:', {
       fileKey: presignedUrlData.fileKey,
@@ -224,6 +231,7 @@ const uploadFileToS3 = async ({
 // React Query hook for single file upload
 const useUploadFile = (validationOptions?: FileValidationOptions) => {
   const queryClient = useQueryClient();
+  const authenticatedFetch = useAuthenticatedFetch();
   
   return useMutation({
     mutationFn: async ({ file, onProgress, signal }: UploadFileParams & { signal?: AbortSignal }) => {
@@ -232,7 +240,7 @@ const useUploadFile = (validationOptions?: FileValidationOptions) => {
         validateFile(file, validationOptions);
       }
       
-      return uploadFileToS3({ file, onProgress, signal });
+      return uploadFileToS3({ file, onProgress, signal, authenticatedFetch });
     },
     onSuccess: (fileURL, variables) => {
       console.log('File uploaded successfully:', fileURL, variables);
@@ -260,6 +268,7 @@ const useUploadFile = (validationOptions?: FileValidationOptions) => {
 // React Query hook for multiple file uploads with queue management
 const useUploadMultipleFiles = (validationOptions?: FileValidationOptions) => {
   const queryClient = useQueryClient();
+  const authenticatedFetch = useAuthenticatedFetch();
   
   return useMutation({
     mutationFn: async ({ 
@@ -288,6 +297,7 @@ const useUploadMultipleFiles = (validationOptions?: FileValidationOptions) => {
             
             const fileURL = await uploadFileToS3({
               file,
+              authenticatedFetch,
               onProgress: (progress) => {
                 onProgress?.(fileIndex, file.name, progress, results.length, files.length);
               }
