@@ -24,11 +24,15 @@ export const TiptapEditor = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadMutation = useUploadFile({
-    maxSize: 5 * 1024 * 1024, // 5MB
-    allowedTypes: ["image/jpeg", "image/png"],
-    allowedExtensions: ["jpg", "jpeg", "png"],
-  });
+  const uploadMutation = useUploadFile(
+    'question',
+    '',
+    {
+      maxSize: 5 * 1024 * 1024, // 5MB
+      allowedTypes: ["image/jpeg", "image/png"],
+      allowedExtensions: ["jpg", "jpeg", "png"],
+    }
+  );
 
   const handleUpload = async (file: File) => {
     let res = { error: false, message: "", url: "" };
