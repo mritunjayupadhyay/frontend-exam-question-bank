@@ -16,8 +16,10 @@ interface ISearchableSelectSingleProps {
   options: ILabelValue[];
   title: string;
   value?: string;
-  onChange: (value: string) => void; // Removed null to match form field expectations
+  onChange: (value: ILabelValue) => void; // Removed null to match form field expectations
   placeholder?: string;
+  isLoading?: boolean; // Optional prop for loading state
+  isDisabled?: boolean; // Optional prop for disabled state
 }
 
 const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
@@ -26,6 +28,8 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
   value,
   onChange,
   placeholder,
+  isLoading = false, // Default to false if not provided
+  isDisabled = false, // Default to false if not provided
 }: ISearchableSelectSingleProps) => {
   const [open, setOpen] = useState(false);
   
@@ -33,14 +37,14 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
   
   const selectedOption = options.find(option => option.value === value);
 
-  const handleSelection = (selectedValue: string) => {
+  const handleSelection = (selectedValue: ILabelValue) => {
     onChange(selectedValue);
     setOpen(false); // Close popover after selection
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild disabled={isDisabled}>
         <Button variant="outline" size="sm" className="h-8 border border-gray-300">
           {selectedOption ? selectedOption.label : (placeholder || title)}
         </Button>
@@ -49,14 +53,14 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
         <Command>
           <CommandInput placeholder={placeholder || title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{isLoading ? "Loading..." : "No results found."}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = value === option.value;
                 return (
                   <CommandItem
                     key={option.value}
-                    onSelect={() => handleSelection(option.value)}
+                    onSelect={() => handleSelection(option)}
                   >
                    {isSelected && <Check />}
                     <span>{option.label}</span>

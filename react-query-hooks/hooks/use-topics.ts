@@ -17,5 +17,6 @@ export function useTopics(id?: string) {
     queryFn: () => fetchTopics(id!, authenticatedFetch),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    enabled: !!id, // Only run the query if id is defined
   });
 }

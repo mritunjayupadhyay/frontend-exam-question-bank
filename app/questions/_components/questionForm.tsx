@@ -11,27 +11,22 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
-import { FileUploader } from "@/components/upload/basic-upload";
 import { TiptapEditor } from "@/components/common/tiptap-editor";
 import { DifficultyLevel, QuestionType } from "question-bank-interface";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import SearchableSelectSingle from "@/components/common/searchable-single-select";
+import { Badge } from "@/components/ui/badge";
+import { useSubjects } from "@/react-query-hooks/hooks/use-subjects";
+import { useClasses } from "@/react-query-hooks/hooks/use-classes";
+import { useTopics } from "@/react-query-hooks/hooks/use-topics";
 
 const questionOptionSchema = z.object({
   optionText: z.string().min(1, "Option text is required"),
@@ -60,11 +55,33 @@ const formSchema = z
       required_error: "Please select a question type",
     }),
 
-    subjectId: z.string().min(1, "Subject is required"),
+    subjectId: z
+      .object({
+        label: z.string().min(1, "Label is required"),
+        value: z.string().min(1, "Value is required"),
+      })
+      .refine((data) => data.value.length > 0, {
+        message: "Subject is required",
+      }),
 
-    topicId: z.string().min(1, "Topic is required"),
+    topicId: z
+      .object({
+        label: z.string().min(1, "Label is required"),
+        value: z.string().min(1, "Value is required"),
+      })
+      .refine((data) => data.value.length > 0, {
+        message: "Topic is required",
+      }),
 
-    classId: z.string().min(1, "Class is required"),
+    classId: z
+      .object({
+        label: z.string().min(1, "Label is required"),
+        value: z.string().min(1, "Value is required"),
+      })
+      .refine((data) => data.value.length > 0, {
+        message: "Class is required",
+      }),
+
     options: z.array(questionOptionSchema).optional(),
   })
   .refine(
@@ -88,6 +105,10 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 export default function QuestionForm() {
+  const [open, setOpen] = React.useState(false);
+  const { data: subjects, isLoading: isLoadingSubjects } = useSubjects();
+  const { data: classes, isLoading: isLoadingClasses } = useClasses();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -95,9 +116,18 @@ export default function QuestionForm() {
       marks: 1,
       difficultyLevel: undefined,
       questionType: undefined,
-      subjectId: "",
-      topicId: "",
-      classId: "",
+      subjectId: {
+        label: "",
+        value: "",
+      },
+      topicId: {
+        label: "",
+        value: "",
+      },
+      classId: {
+        label: "",
+        value: "",
+      },
       options: [],
     },
   });
@@ -109,25 +139,13 @@ export default function QuestionForm() {
 
   const questionType = form.watch("questionType");
   const questionText = form.watch("questionText");
+  const questionMarks = form.watch("marks");
+  const difficultyLevel = form.watch("difficultyLevel");
+  const subject = form.watch("subjectId");
+  const topic = form.watch("topicId");
+  const classValue = form.watch("classId");
 
-  // Mock data for dropdowns - replace with actual data from your API
-  const subjects = [
-    { id: "sub1", name: "Mathematics" },
-    { id: "sub2", name: "Science" },
-    { id: "sub3", name: "English" },
-  ];
-
-  const topics = [
-    { id: "topic1", name: "Algebra" },
-    { id: "topic2", name: "Geometry" },
-    { id: "topic3", name: "Physics" },
-  ];
-
-  const classes = [
-    { id: "class1", name: "Grade 10" },
-    { id: "class2", name: "Grade 11" },
-    { id: "class3", name: "Grade 12" },
-  ];
+  const { data: topics, isLoading: isLoadingTopics } = useTopics(subject?.value);
 
   const addOption = () => {
     append({ optionText: "", isCorrect: false });
@@ -153,155 +171,190 @@ export default function QuestionForm() {
     <div className="mx-auto p-6">
       <Form {...form}>
         <div className="space-y-8">
-          <div className="space-y-8 bg-white p-6 rounded-lg shadow-md">
-            <div>
-              <FormField
-                control={form.control}
-                name="marks"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Marks *</FormLabel>
-                    <FormControl>
-                      <div className="flex flex-wrap gap-2">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((mark) => (
-                          <Button
-                            key={mark}
-                            type="button"
-                            variant={
-                              field.value === mark ? "secondary" : "outline"
-                            }
-                            onClick={() => field.onChange(mark)}
-                          >
-                            {mark}
-                          </Button>
-                        ))}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Question Configuration
+                <Button
+                  type="button"
+                  variant="transparent"
+                  size="sm"
+                  onClick={() => setOpen(!open)}
+                  className="flex items-center gap-2"
+                >
+                  {open ? <ChevronDown /> : <ChevronUp />}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {open ? (
+                <div className="space-y-8">
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="marks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Marks *</FormLabel>
+                          <FormControl>
+                            <div className="flex flex-wrap gap-2">
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((mark) => (
+                                <Button
+                                  key={mark}
+                                  type="button"
+                                  variant={
+                                    field.value === mark
+                                      ? "secondary"
+                                      : "outline"
+                                  }
+                                  onClick={() => field.onChange(mark)}
+                                >
+                                  {mark}
+                                </Button>
+                              ))}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Marks */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Marks */}
 
-              <FormField
-                control={form.control}
-                name="difficultyLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Difficulty Level *</FormLabel>
-                    <FormControl>
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          DifficultyLevel.LOW,
-                          DifficultyLevel.MEDIUM,
-                          DifficultyLevel.HARD,
-                        ].map((difficulty) => (
-                          <Button
-                            key={difficulty}
-                            type="button"
-                            variant={
-                              field.value === difficulty
-                                ? "secondary"
-                                : "outline"
-                            }
-                            onClick={() => field.onChange(difficulty)}
-                          >
-                            {difficulty.toUpperCase()}
-                          </Button>
-                        ))}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <FormField
+                      control={form.control}
+                      name="difficultyLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Difficulty Level *</FormLabel>
+                          <FormControl>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                DifficultyLevel.LOW,
+                                DifficultyLevel.MEDIUM,
+                                DifficultyLevel.HARD,
+                              ].map((difficulty) => (
+                                <Button
+                                  key={difficulty}
+                                  type="button"
+                                  variant={
+                                    field.value === difficulty
+                                      ? "secondary"
+                                      : "outline"
+                                  }
+                                  onClick={() => field.onChange(difficulty)}
+                                >
+                                  {difficulty.toUpperCase()}
+                                </Button>
+                              ))}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              {/* Question Type */}
-            </div>
-            {/* Classification Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Subject */}
-              <FormField
-                control={form.control}
-                name="subjectId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subject *</FormLabel>
-                    <FormControl>
-                      <div>
-                        <SearchableSelectSingle
-                          options={subjects.map((subject) => ({
-                            value: subject.id,
-                            label: subject.name,
-                          }))}
-                          title="Select subject"
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="Select subject"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    {/* Question Type */}
+                  </div>
+                  {/* Classification Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Class */}
+                    <FormField
+                      control={form.control}
+                      name="classId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Class *</FormLabel>
+                          <FormControl>
+                            <div>
+                              <SearchableSelectSingle
+                                options={(classes?.data || []).map((classItem) => ({
+                                  value: classItem.id,
+                                  label: classItem.name,
+                                }))}
+                                title="Select class"
+                                value={field.value.value}
+                                onChange={field.onChange}
+                                placeholder={isLoadingClasses ? "Loading classes..." : "Select class"}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Subject */}
+                    <FormField
+                      control={form.control}
+                      name="subjectId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subject *</FormLabel>
+                          <FormControl>
+                            <div>
+                              <SearchableSelectSingle
+                                options={(subjects?.data || []).map((subject) => ({
+                                  value: subject.id,
+                                  label: subject.name,
+                                }))}
+                                title="Select subject"
+                                value={field.value.value}
+                                onChange={field.onChange}
+                                isLoading={isLoadingSubjects}
+                                placeholder={isLoadingSubjects ? "Loading subjects..." : "Select subject"}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              {/* Topic */}
-              <FormField
-                control={form.control}
-                name="topicId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Topic *</FormLabel>
-                    <FormControl>
-                      <div>
-                        <SearchableSelectSingle
-                          options={topics.map((topic) => ({
-                            value: topic.id,
-                            label: topic.name,
-                          }))}
-                          title="Select topic"
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="Select topic"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    {/* Topic */}
+                    {subject?.value ?<FormField
+                      control={form.control}
+                      name="topicId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Topic *</FormLabel>
+                          <FormControl>
+                            <div>
+                              <SearchableSelectSingle
+                                options={(topics?.data || []).map((topic) => ({
+                                  value: topic.id,
+                                  label: topic.name,
+                                }))}
+                                title="Select topic"
+                                  value={field.value.value}
+                                onChange={field.onChange}
+                                placeholder={isLoadingTopics ? "Loading topics..." : "Select topic"}
+                                isLoading={isLoadingTopics}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />: null}
 
-              {/* Class */}
-              <FormField
-                control={form.control}
-                name="classId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Class *</FormLabel>
-                    <FormControl>
-                      <div>
-                        <SearchableSelectSingle
-                          options={classes.map((classItem) => ({
-                            value: classItem.id,
-                            label: classItem.name,
-                          }))}
-                          title="Select class"
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="Select class"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+                    
+                  </div>
+                </div>
+              ) : (
+                <div className="flex questions-center gap-2">
+                  <Badge variant="label">Class: {classValue.label}</Badge>
+                  <Badge variant="label">{difficultyLevel}</Badge>
+                  <Badge variant="label">{questionMarks}</Badge>
+                  <Badge variant="label">{topic.label}</Badge>
+                  <Badge variant="label">{subject.label}</Badge>
+                  <Badge variant="success">{questionMarks}</Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div>
             <div
               className="flex justify-between items-center"
