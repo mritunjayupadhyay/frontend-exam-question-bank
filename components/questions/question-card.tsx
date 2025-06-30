@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { useDispatch, useSelector } from 'react-redux';
 import { Badge } from "../ui/badge";
 import { ComponentProps } from "react";
-import Text from "../../components/common/text";
 import { questionsState, selectQuestion } from "../../rtk/slices/question.slice";
 
 interface QuestionCardProps {
@@ -51,9 +50,10 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
               
             </div>
             <div className="line-clamp-2 text-xs text-muted-foreground">
-            <Text type="boldText">
-              {question.questionText.substring(0, 150)}
-              </Text>
+              <div
+                  className="prose prose-sm max-w-none text-black font-noto-sans font-medium text-sm"
+                  dangerouslySetInnerHTML={{ __html: question.questionText }}
+                />
             </div>
             {[question.topic].length ? (
               <div className="flex questions-center gap-2">
