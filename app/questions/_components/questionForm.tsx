@@ -16,7 +16,7 @@ import { z } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { TiptapEditor } from "@/components/common/tiptap-editor";
-import { DifficultyLevel, QuestionType } from "question-bank-interface";
+import { DifficultyLevel, ICreateQuestionRequest, QuestionType } from "question-bank-interface";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSubjects } from "@/react-query-hooks/hooks/use-subjects";
 import { useClasses } from "@/react-query-hooks/hooks/use-classes";
 import { useTopics } from "@/react-query-hooks/hooks/use-topics";
+import { useCreateQuestion } from "@/react-query-hooks/hooks/use-questions";
 
 const questionOptionSchema = z.object({
   optionText: z.string().min(1, "Option text is required"),
@@ -108,6 +109,7 @@ export default function QuestionForm() {
   const [open, setOpen] = React.useState(false);
   const { data: subjects, isLoading: isLoadingSubjects } = useSubjects();
   const { data: classes, isLoading: isLoadingClasses } = useClasses();
+  const createQuestionMutation = useCreateQuestion();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -155,16 +157,41 @@ export default function QuestionForm() {
     remove(index);
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form submitted with values:", values);
-    const submitData = {
+    
+    try {
+      const submitData = {
       ...values,
       options:
         values.questionType === QuestionType.MULTIPLE_CHOICE
           ? values.options
           : undefined,
     };
-    console.log(submitData);
+      formSchema.parse(submitData);
+      const payload:ICreateQuestionRequest = {
+        questionText: submitData.questionText,
+        marks: submitData.marks,
+        difficultyLevel: submitData.difficultyLevel,
+        questionType: QuestionType.MULTIPLE_CHOICE,
+        subjectId: submitData.subjectId.value,
+        topicId: submitData.topicId.value,
+        classId: submitData.classId.value,
+        options: submitData.options?.map((option) => ({
+          optionText: option.optionText,
+          isCorrect: option.isCorrect,
+        })),
+      }
+      await createQuestionMutation.mutateAsync(payload);
+      // Here you would typically send the data to your API
+      console.log("Parsed data is valid:", submitData);
+    } catch (error) {
+      console.error("Error parsing form data:", error);
+      form.setError("root", {
+        type: "manual",
+        message: "There was an error with the form submission. Please check your inputs.",
+      });
+    }
   }
 
   return (

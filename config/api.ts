@@ -4,6 +4,7 @@ export const ENDPOINTS = {
   QUESTIONS: {
     FULL_INFO: (id: string) => `${API_BASE_URL}/qs/questions/${id}/full`,
     LIST: `${API_BASE_URL}/qs/questions/filter`,
+    CREATE: `${API_BASE_URL}/qs/questions`,
     // Add other endpoints here
   },
   SUBJECTS: {

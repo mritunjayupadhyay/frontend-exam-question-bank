@@ -1,6 +1,6 @@
 'use client';
-import { IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-interface';
-import { useQuery } from '@tanstack/react-query';
+import { ICreateQuestionRequest, IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-interface';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ENDPOINTS } from '@/config/api';
 import { getQueryParams } from '@/utils/getQueryParams.util';
 import { useAuthenticatedFetch } from './use-authenticated-fetch';
@@ -42,6 +42,20 @@ const fetchQuestions = async (
   return authenticatedFetch(queryParams ? `${url}?${queryParams}` : url);
 };
 
+const createQuestion = async (
+  payload: ICreateQuestionRequest,
+  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch>
+): Promise<{data: IQuestion, error: boolean}> => {
+  const url = ENDPOINTS.QUESTIONS.CREATE;
+  return authenticatedFetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+};
+
 export function useQuestions(filter: IQuestionFilter) {
   const authenticatedFetch = useAuthenticatedFetch(); // ✅ Clean and reusable
   
@@ -62,4 +76,24 @@ export function useQuestion(id?: string) {
         refetchOnWindowFocus: false,
         enabled: !!id // Only run the query when id exists
     });
+}
+
+export function useCreateQuestion() {
+  const authenticatedFetch = useAuthenticatedFetch();
+  const queryClient = useQueryClient();
+  
+  return useMutation<{data: IQuestion, error: boolean}, Error, ICreateQuestionRequest>({
+    mutationFn: (payload) => createQuestion(payload, authenticatedFetch),
+    onSuccess: (response, variables) => {
+      // Invalidate and refetch questions list
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      console.log('Question created successfully:', response.data, variables);
+      // Optionally, you can also update the cache directly
+     
+    },
+    onError: (error) => {
+      console.error('Failed to create question:', error);
+      // Handle error (show toast, etc.)
+    },
+  });
 }

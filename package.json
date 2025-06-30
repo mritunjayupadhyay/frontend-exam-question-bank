@@ -41,7 +41,7 @@
     "cmdk": "^1.1.1",
     "lucide-react": "^0.487.0",
     "next": "15.2.4",
-    "question-bank-interface": "^1.0.8",
+    "question-bank-interface": "^1.0.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.55.0",
