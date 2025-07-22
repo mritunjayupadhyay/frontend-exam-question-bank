@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Bold,
   Italic,
@@ -10,8 +9,9 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
-import { useCallback, useRef, ChangeEvent } from "react";
+import { useCallback, useRef, ChangeEvent, useEffect, useState } from "react";
 import { useUploadFile } from "@/react-query-hooks/hooks/use-uploads3";
+import ImageViewer from "./image-viewer";
 
 export const TiptapEditor = ({
   value,
@@ -23,6 +23,11 @@ export const TiptapEditor = ({
   placeholder?: string;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [viewerImage, setViewerImage] = useState({ 
+    isOpen: false, 
+    url: '', 
+    alt: '' 
+  });
 
   const uploadMutation = useUploadFile(
     'question',
@@ -34,7 +39,7 @@ export const TiptapEditor = ({
     }
   );
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = useCallback(async (file: File) => {
     let res = { error: false, message: "", url: "" };
     try {
       const fileURL = await uploadMutation.mutateAsync({
@@ -61,7 +66,7 @@ export const TiptapEditor = ({
     } finally {
         return res;
     }
-  };
+  }, [uploadMutation]);
 
   const editor = useEditor({
     extensions: [
@@ -74,7 +79,8 @@ export const TiptapEditor = ({
         inline: false,
         allowBase64: false,
         HTMLAttributes: {
-          class: "rounded-lg max-w-full h-auto",
+          class: "question-image rounded-lg cursor-pointer hover:opacity-90 transition-opacity",
+          style: "width: 200px; height: 150px; object-fit: cover; display: inline-block; margin: 1rem auto;",
         },
       }),
       Link.configure({
@@ -147,12 +153,37 @@ export const TiptapEditor = ({
         fileInputRef.current.value = "";
       }
     },
-    [editor]
+    [editor, handleUpload]
   );
+  // Handle image clicks to open viewer
+  const handleEditorClick = useCallback((event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'IMG' && target.classList.contains('question-image')) {
+      event.preventDefault();
+      setViewerImage({
+        isOpen: true,
+        url: (target as HTMLImageElement).src,
+        alt: (target as HTMLImageElement).alt
+      });
+    }
+  }, []);
+
+  // Close viewer on ESC key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && viewerImage.isOpen) {
+        setViewerImage(prev => ({ ...prev, isOpen: false }));
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [viewerImage.isOpen]);
 
   if (!editor) return null;
 
   return (
+    <>
     <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
       {/* Toolbar */}
       <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
@@ -223,9 +254,16 @@ export const TiptapEditor = ({
       </div>
 
       {/* Editor */}
-      <div className="min-h-[200px]">
+      <div className="min-h-[200px]" onClick={handleEditorClick}>
         <EditorContent editor={editor} placeholder={placeholder} />
       </div>
     </div>
+    <ImageViewer
+        isOpen={viewerImage.isOpen}
+        imageUrl={viewerImage.url}
+        imageAlt={viewerImage.alt}
+        onClose={() => setViewerImage(prev => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 };
