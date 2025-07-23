@@ -36,22 +36,22 @@ const ImageViewer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-      <div className="relative max-w-4xl max-h-full">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white relative w-full max-w-xl rounded-2xl shadow-xl overflow-hidden">
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 flex justify-between items-center p-4 bg-black bg-opacity-50 text-white rounded-t-lg">
-          <span className="text-sm truncate max-w-xs">{imageAlt || 'Image'}</span>
+        <div className="absolute top-0 left-0 right-0 z-10 flex justify-between items-center p-4 bg-[#F3F0F4] text-white rounded-t-lg">
+          <span className="text-sm truncate max-w-xs text-gray-500 hover:text-gray-700">{imageAlt || 'Image'}</span>
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+              className="p-2 text-gray-500 hover:text-gray-700 rounded-full transition-colors"
               title="Download"
             >
               <Download size={20} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+              className="p-2 bg-gray-500 hover:bg-gray-700 rounded-full transition-colors"
               title="Close"
             >
               <X size={20} />

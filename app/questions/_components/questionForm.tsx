@@ -173,7 +173,7 @@ export default function QuestionForm() {
         questionText: submitData.questionText,
         marks: submitData.marks,
         difficultyLevel: submitData.difficultyLevel,
-        questionType: QuestionType.MULTIPLE_CHOICE,
+        questionType: submitData.questionType,
         subjectId: submitData.subjectId.value,
         topicId: submitData.topicId.value,
         classId: submitData.classId.value,
@@ -371,12 +371,11 @@ export default function QuestionForm() {
                 </div>
               ) : (
                 <div className="flex questions-center gap-2">
-                  <Badge variant="label">Class: {classValue.label}</Badge>
-                  <Badge variant="label">{difficultyLevel}</Badge>
-                  <Badge variant="label">{questionMarks}</Badge>
-                  <Badge variant="label">{topic.label}</Badge>
-                  <Badge variant="label">{subject.label}</Badge>
-                  <Badge variant="success">{questionMarks}</Badge>
+                  {classValue.label && <Badge variant="label">Class: {classValue.label}</Badge>}
+                  {difficultyLevel && <Badge variant="label">Difficulty: {difficultyLevel}</Badge>}
+                  {topic.label && <Badge variant="label">Topic: {topic.label}</Badge>}
+                  {subject.label && <Badge variant="label">Subject: {subject.label}</Badge>}
+                  {questionMarks && <Badge variant="success">Marks: {questionMarks}</Badge>}
                 </div>
               )}
             </CardContent>
@@ -409,7 +408,6 @@ export default function QuestionForm() {
                         <Label htmlFor="airplane-mode">MCQ</Label>
                       </div>
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
