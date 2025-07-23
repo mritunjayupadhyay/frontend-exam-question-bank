@@ -117,7 +117,7 @@ export default function QuestionForm() {
       questionText: "",
       marks: 1,
       difficultyLevel: undefined,
-      questionType: undefined,
+      questionType: QuestionType.DESCRIPTIVE,
       subjectId: {
         label: "",
         value: "",
