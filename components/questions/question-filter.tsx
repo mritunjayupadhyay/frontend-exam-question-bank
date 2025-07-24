@@ -10,8 +10,9 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import Text from "../common/text";
 import { questionsFilterState, setDifficultyLevel, setMarks, setQuestionFilter, setTopics } from "@/rtk/slices/question.filter.slice";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { DifficultyLevel, QuestionType } from "question-bank-interface";
+import { debounce } from "lodash";
 
 export default function QuestionFilter() {
   // Redux store
@@ -30,10 +31,13 @@ export default function QuestionFilter() {
     console.log({ handleDifficultySelection: value });
     dispatch(setDifficultyLevel(value));
   };
-  const handleMarksChange = (values: number[]) => {
-    console.log({ handleMarksChange: values });
+  const debouncedHandleMarksChange = useMemo(
+  () => debounce((values: number[]) => {
     dispatch(setMarks(values));
-  };
+  }, 300),
+  [dispatch]
+);
+
   const handleQuestionTypeSelection = (checked: boolean) => {
     console.log({ handleQuestionTypeSelection: checked });
     const questionType = checked ? QuestionType.MULTIPLE_CHOICE : QuestionType.DESCRIPTIVE;
@@ -78,7 +82,7 @@ export default function QuestionFilter() {
         <div className="flex-1 flex justify-end items-center gap-2">
           <Text type="lightText">Marks</Text>
           <div className="w-[300px]">
-            <TwoThumbSlider min={1} max={10} onChange={handleMarksChange} />
+            <TwoThumbSlider min={1} max={10} onChange={debouncedHandleMarksChange} />
           </div>
         </div>
       </div>

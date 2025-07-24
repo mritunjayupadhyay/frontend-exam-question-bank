@@ -2,16 +2,18 @@
 import { useState } from "react";
 import { Slider } from "../ui/slider";
 import { on } from "events";
+import { Badge } from "../ui/badge";
 
 interface ITwoThumbSliderProps {
   min: number;
   max: number;
   step?: number;
   onChange: (val: [number, number]) => void;
+  showCurrentValues?: boolean;
 }
 
 const TwoThumbSlider: React.FC<ITwoThumbSliderProps> = ({
-    min, max, onChange, step = 1
+    min, max, onChange, step = 1, showCurrentValues = true
   }: ITwoThumbSliderProps) => {
     const [values, setValues] = useState([min, max]);
     const handleValueChange = (newValues: [number, number]) => {
@@ -22,7 +24,24 @@ const TwoThumbSlider: React.FC<ITwoThumbSliderProps> = ({
         setValues([orderedValues[0], orderedValues[1]]);
       };
     return (
-        <Slider
+        <div className="w-full flex flex-col gap-2">
+          {showCurrentValues && (
+            <div className="flex justify-between text-sm">
+              <Badge
+                className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums"
+                variant="outline"
+              >
+                {values[0]}
+              </Badge>
+              <Badge
+                className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums"
+                variant="outline"
+              >
+                {values[1]}
+              </Badge>
+            </div>
+          )}
+          <Slider
                 min={min}
                 max={max}
                 step={step}
@@ -33,6 +52,7 @@ const TwoThumbSlider: React.FC<ITwoThumbSliderProps> = ({
                 className="w-full"
               >
               </Slider>
+        </div>
     )
 }
 export default TwoThumbSlider;

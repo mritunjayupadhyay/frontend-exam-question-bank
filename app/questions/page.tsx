@@ -49,7 +49,7 @@ const QuestionsPage = () => {
 
   const [open, setOpen] = useState(false);
 
-  if (isLoading) return <div>Loading...</div>;
+  // if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading questions</div>;
 
   const handleClick = () => {
@@ -69,7 +69,7 @@ const QuestionsPage = () => {
           {showQuestion ? <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
             <Text type="section-header">Questions of {subject?.name} for Class {className?.name} </Text>
             <QuestionFilter />
-            <QuestionList questions={questionsRes?.data || []} />
+            {isLoading ? <div>Loading...</div> : <QuestionList questions={questionsRes?.data || []} />}
           </div> : <GetClassSubject />}
         </ResizablePanel>
         {selectedQuestion?.id ? <ResizableHandle /> : null}
