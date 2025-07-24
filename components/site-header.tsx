@@ -22,11 +22,11 @@ import { Button } from "./ui/button"
 export function SiteHeader() {
 
   return (
-    <header className="sticky top-0 z-50 flex w-full items-center border-b flex items-center justify-between h-20 min-w-[1150px] px-6 py-4 bg- border-b border-b-surfaceVariant shrink-0 self-stretch"
+    <header className="sticky top-0 z-50 flex w-full items-center border-b flex items-center justify-between h-20 max-w-full px-6 py-4 bg- border-b border-b-surfaceVariant shrink-0 self-stretch"
     style={{ background: "var(--Schemes-Surface, #FBF8FD);" }}
     >
       <div className="flex h-(--header-height) w-full justify-between items-center gap-2 px-4">
-        <p style={{ color: '#0055A6', fontSize: 30, fontWeight: 'bold'}}>Question Bank</p>
+        <p style={{ color: '#0055A6', fontSize: 26, fontWeight: 'bold'}}>Question Bank</p>
         <ClerkLoading>
           <Loader className="h-5 w-5 text-muted-foreground animate-spin" />
         </ClerkLoading>

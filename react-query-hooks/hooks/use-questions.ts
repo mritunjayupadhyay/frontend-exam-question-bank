@@ -1,60 +1,8 @@
 'use client';
 import { ICreateQuestionRequest, IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-interface';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ENDPOINTS } from '@/config/api';
-import { getQueryParams } from '@/utils/getQueryParams.util';
 import { useAuthenticatedFetch } from './use-authenticated-fetch';
-import { createAuthenticatedFetch } from '../authenticated-api-handler';
-
-// Simulated API function
-
-const fetchQuestion = async (id: string): Promise<IQuestionFullDetails> => {
-  try {
-    const url = ENDPOINTS.QUESTIONS.FULL_INFO(id);
-    const res = await fetch(url);
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        console.error('Failed to fetch questions', { status: res.status, errorData });
-        throw new Error(`Failed to fetch questions: ${res.status}`);
-      }
-      
-      const data = await res.json();
-      if (!data) {
-        throw new Error('No data found');
-      }
-      if (data.error && data.data) {
-        throw new Error(data.error);  
-      }
-      return data.data;
-  } catch (error) {
-    console.error('Error fetching question:', error);
-    throw error;
-  }
-}
-
-const fetchQuestions = async (
-  filter: IQuestionFilter,
-  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch>
-): Promise<{data: IQuestion[], error: boolean}> => {
-  const url = ENDPOINTS.QUESTIONS.LIST;
-  const queryParams = getQueryParams(filter);
-  return authenticatedFetch(queryParams ? `${url}?${queryParams}` : url);
-};
-
-const createQuestion = async (
-  payload: ICreateQuestionRequest,
-  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch>
-): Promise<{data: IQuestion, error: boolean}> => {
-  const url = ENDPOINTS.QUESTIONS.CREATE;
-  return authenticatedFetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-};
+import { createQuestion, deleteQuestion, fetchQuestion, fetchQuestions } from '@/api-handler/questions.api';
 
 export function useQuestions(filter: IQuestionFilter) {
   const authenticatedFetch = useAuthenticatedFetch(); // ✅ Clean and reusable
@@ -69,9 +17,11 @@ export function useQuestions(filter: IQuestionFilter) {
 }
 
 export function useQuestion(id?: string) {
+    const authenticatedFetch = useAuthenticatedFetch(); // ✅ Clean and reusable
+
     return useQuery<IQuestionFullDetails, Error>({
         queryKey: ['question', id],
-        queryFn: () => fetchQuestion(id!),
+        queryFn: () => fetchQuestion(id!, authenticatedFetch),
         staleTime: 1000 * 60 * 5, // 5 minutes
         refetchOnWindowFocus: false,
         enabled: !!id // Only run the query when id exists
@@ -93,6 +43,24 @@ export function useCreateQuestion() {
     },
     onError: (error) => {
       console.error('Failed to create question:', error);
+      // Handle error (show toast, etc.)
+    },
+  });
+}
+
+export function useDeleteQuestion() {
+  const authenticatedFetch = useAuthenticatedFetch();
+  const queryClient = useQueryClient();
+  
+  return useMutation<{data: IQuestion, error: boolean}, Error, string>({
+    mutationFn: (id) => deleteQuestion(id, authenticatedFetch),
+    onSuccess: (response, id) => {
+      // Invalidate and refetch questions list
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      console.log('Question deleted successfully:', id, response.data);
+    },
+    onError: (error) => {
+      console.error('Failed to delete question:', error);
       // Handle error (show toast, etc.)
     },
   });

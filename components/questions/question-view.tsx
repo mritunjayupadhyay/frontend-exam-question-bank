@@ -8,15 +8,18 @@ import {
 } from "../../rtk/slices/question.slice";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
-import { useQuestion } from "@/react-query-hooks/hooks/use-questions";
+import { useDeleteQuestion, useQuestion } from "@/react-query-hooks/hooks/use-questions";
 import Image from "next/image";
 import { Checkbox } from "../ui/checkbox";
 
 const QuestionView: React.FC = () => {
   const { selectedQuestion } = useSelector(questionsState);
+
   const { data: questionDetails, isLoading } = useQuestion(
     selectedQuestion?.id
   );
+    const deleteQuestionMutation = useDeleteQuestion();
+  
   console.log("questionDetails", {
     isLoading,
     questionDetails,
@@ -28,6 +31,13 @@ const QuestionView: React.FC = () => {
   const onSelectQuestion = () => {
     dispatch(selectQuestion(null));
   };
+
+  const deleteQuestion = (id: string) => {
+    // Implement delete logic here
+    console.log("Delete question with ID:", id);
+    deleteQuestionMutation.mutate(id);
+    dispatch(selectQuestion(null));
+  }
 
   if (!selectedQuestion) {
     return null;
@@ -44,13 +54,22 @@ const QuestionView: React.FC = () => {
         >
           <ArrowLeft />
         </Button>
-        <Button
+        <div className="flex items-center gap-2">
+          <Button
             variant="link"
           size="icon"
           onClick={onSelectQuestion}
         >
           <Text type="lightText">Edit</Text>
         </Button>
+        <Button
+            variant="destructive"
+          size="sm"
+          onClick={() => deleteQuestion(selectedQuestion.id)}
+        >
+          <Text className="text-sm text-white">Delete</Text>
+        </Button>
+        </div>
       </div>
       <div
         className={cn(
