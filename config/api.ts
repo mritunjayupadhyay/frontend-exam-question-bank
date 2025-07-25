@@ -8,6 +8,11 @@ export const ENDPOINTS = {
     DELETE: (id: string) => `${API_BASE_URL}/qs/questions/${id}`,
     // Add other endpoints here
   },
+  EXAM_PAPERS: {
+    LIST: `${API_BASE_URL}/ex-p/exam-papers/filter`,
+    CREATE: `${API_BASE_URL}/ex-p/exam-papers`,
+    DELETE: (id: string) => `${API_BASE_URL}/ex-p/exam-papers/${id}`,
+  },
   SUBJECTS: {
     LIST: `${API_BASE_URL}/qs/subjects`,
   },

@@ -50,6 +50,22 @@ const data = {
           url: "/questions/create",
         }
       ],
+    },
+    {
+      title: "Exam Papers",
+      url: "#",
+      icon: BookOpen,
+      isActive: true,
+      items: [
+        {
+          title: "List Exam Papers",
+          url: "/exam-papers",
+        },
+        {
+          title: "Add Exam Paper",
+          url: "/exam-papers/create",
+        }
+      ],
     }
   ],
   navSecondary: [

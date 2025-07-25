@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
 import { Slider } from "../ui/slider";
-import { on } from "events";
 import { Badge } from "../ui/badge";
 
 interface ITwoThumbSliderProps {
