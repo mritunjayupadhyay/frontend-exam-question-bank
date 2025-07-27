@@ -28,6 +28,9 @@ import { useSubjects } from "@/react-query-hooks/hooks/use-subjects";
 import { useClasses } from "@/react-query-hooks/hooks/use-classes";
 import { useTopics } from "@/react-query-hooks/hooks/use-topics";
 import { useCreateQuestion } from "@/react-query-hooks/hooks/use-questions";
+import { useSelector } from "react-redux";
+import { classSubjectState } from "@/rtk/slices/classSubject.slice";
+import GetClassSubject from "@/components/questions/get-claas-subject";
 
 const questionOptionSchema = z.object({
   optionText: z.string().min(1, "Option text is required"),
@@ -56,15 +59,6 @@ const formSchema = z
       required_error: "Please select a question type",
     }),
 
-    subjectId: z
-      .object({
-        label: z.string().min(1, "Label is required"),
-        value: z.string().min(1, "Value is required"),
-      })
-      .refine((data) => data.value.length > 0, {
-        message: "Subject is required",
-      }),
-
     topicId: z
       .object({
         label: z.string().min(1, "Label is required"),
@@ -73,16 +67,6 @@ const formSchema = z
       .refine((data) => data.value.length > 0, {
         message: "Topic is required",
       }),
-
-    classId: z
-      .object({
-        label: z.string().min(1, "Label is required"),
-        value: z.string().min(1, "Value is required"),
-      })
-      .refine((data) => data.value.length > 0, {
-        message: "Class is required",
-      }),
-
     options: z.array(questionOptionSchema).optional(),
   })
   .refine(
@@ -107,8 +91,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function QuestionForm() {
   const [open, setOpen] = React.useState(false);
-  const { data: subjects, isLoading: isLoadingSubjects } = useSubjects();
-  const { data: classes, isLoading: isLoadingClasses } = useClasses();
+  // const { data: subjects, isLoading: isLoadingSubjects } = useSubjects();
+  // const { data: classes, isLoading: isLoadingClasses } = useClasses();
+
+    const { className, subject } = useSelector(classSubjectState);
+
   const createQuestionMutation = useCreateQuestion();
 
   const form = useForm<FormValues>({
@@ -118,15 +105,7 @@ export default function QuestionForm() {
       marks: 1,
       difficultyLevel: undefined,
       questionType: QuestionType.DESCRIPTIVE,
-      subjectId: {
-        label: "",
-        value: "",
-      },
       topicId: {
-        label: "",
-        value: "",
-      },
-      classId: {
         label: "",
         value: "",
       },
@@ -143,11 +122,10 @@ export default function QuestionForm() {
   const questionText = form.watch("questionText");
   const questionMarks = form.watch("marks");
   const difficultyLevel = form.watch("difficultyLevel");
-  const subject = form.watch("subjectId");
+  // const subject = form.watch("subjectId");
   const topic = form.watch("topicId");
-  const classValue = form.watch("classId");
 
-  const { data: topics, isLoading: isLoadingTopics } = useTopics(subject?.value);
+  const { data: topics, isLoading: isLoadingTopics } = useTopics(subject?.id);
 
   const addOption = () => {
     append({ optionText: "", isCorrect: false });
@@ -159,6 +137,10 @@ export default function QuestionForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form submitted with values:", values);
+
+    if (!(className?.id && subject?.id)) {
+      return alert("Please select a class and subject first."); // Ensure class and subject
+    }
     
     try {
       const submitData = {
@@ -174,9 +156,9 @@ export default function QuestionForm() {
         marks: submitData.marks,
         difficultyLevel: submitData.difficultyLevel,
         questionType: submitData.questionType,
-        subjectId: submitData.subjectId.value,
+        subjectId: subject?.id,
         topicId: submitData.topicId.value,
-        classId: submitData.classId.value,
+        classId: className?.id,
         options: submitData.options?.map((option) => ({
           optionText: option.optionText,
           isCorrect: option.isCorrect,
@@ -194,8 +176,12 @@ export default function QuestionForm() {
     }
   }
 
+    if (!(className?.id && subject?.id)) {
+      return <GetClassSubject />
+    }
+
   return (
-    <div className="mx-auto p-6">
+    <div className="mx-auto">
       <Form {...form}>
         <div className="space-y-8">
           <Card>
@@ -282,65 +268,8 @@ export default function QuestionForm() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Question Type */}
-                  </div>
-                  {/* Classification Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Class */}
-                    <FormField
-                      control={form.control}
-                      name="classId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class *</FormLabel>
-                          <FormControl>
-                            <div>
-                              <SearchableSelectSingle
-                                options={(classes?.data || []).map((classItem) => ({
-                                  value: classItem.id,
-                                  label: classItem.name,
-                                }))}
-                                title="Select class"
-                                value={field.value.value}
-                                onChange={field.onChange}
-                                placeholder={isLoadingClasses ? "Loading classes..." : "Select class"}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {/* Subject */}
-                    <FormField
-                      control={form.control}
-                      name="subjectId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subject *</FormLabel>
-                          <FormControl>
-                            <div>
-                              <SearchableSelectSingle
-                                options={(subjects?.data || []).map((subject) => ({
-                                  value: subject.id,
-                                  label: subject.name,
-                                }))}
-                                title="Select subject"
-                                value={field.value.value}
-                                onChange={field.onChange}
-                                isLoading={isLoadingSubjects}
-                                placeholder={isLoadingSubjects ? "Loading subjects..." : "Select subject"}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Topic */}
-                    {subject?.value ?<FormField
+                     {/* Topic */}
+                    {subject?.id ?<FormField
                       control={form.control}
                       name="topicId"
                       render={({ field }) => (
@@ -366,15 +295,15 @@ export default function QuestionForm() {
                       )}
                     />: null}
 
-                    
+                    {/* Question Type */}
                   </div>
                 </div>
               ) : (
                 <div className="flex questions-center gap-2">
-                  {classValue.label && <Badge variant="label">Class: {classValue.label}</Badge>}
+                  {className.name && <Badge variant="label">Class: {className.name}</Badge>}
                   {difficultyLevel && <Badge variant="label">Difficulty: {difficultyLevel}</Badge>}
                   {topic.label && <Badge variant="label">Topic: {topic.label}</Badge>}
-                  {subject.label && <Badge variant="label">Subject: {subject.label}</Badge>}
+                  {subject.name && <Badge variant="label">Subject: {subject.name}</Badge>}
                   {questionMarks && <Badge variant="success">Marks: {questionMarks}</Badge>}
                 </div>
               )}
@@ -425,9 +354,6 @@ export default function QuestionForm() {
                       placeholder="Write your question text here..."
                     />
                   </FormControl>
-                  <FormDescription>
-                    This is your public display name.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -12,7 +12,8 @@ import {
   Send,
   Settings2,
   SidebarIcon,
-  PlusIcon
+  PlusIcon,
+  NotebookText
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -22,11 +23,15 @@ import { NavMain } from "@/components/nav-main"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   // SidebarFooter,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "./ui/button"
+import { NavProjects } from "./nav-projects"
+import { NavSecondary } from "./nav-secondary"
+import { NavUser } from "./nav-user"
 
 const data = {
   user: {
@@ -54,7 +59,7 @@ const data = {
     {
       title: "Exam Papers",
       url: "#",
-      icon: BookOpen,
+      icon: NotebookText,
       isActive: true,
       items: [
         {

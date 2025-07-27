@@ -12,5 +12,5 @@ export function useExamPapers(filter: IQuestionFilter) {
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     // enabled: !!(filter.classId && filter.subjectId),
-  });
+  }); 
 }

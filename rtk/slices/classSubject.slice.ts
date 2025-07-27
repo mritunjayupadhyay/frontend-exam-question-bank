@@ -17,9 +17,11 @@ export const classSubjectSlice = createSlice({
   initialState,
   reducers: {
     setClass: (state, action) => {
+      console.log("Setting class: ", action.payload);
       state.className = action.payload;
     },
     setSubject: (state, action) => {
+      console.log("Setting subject: ", action.payload);
       state.subject = action.payload;
     }
   },

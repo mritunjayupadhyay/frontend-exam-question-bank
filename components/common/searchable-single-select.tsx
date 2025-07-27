@@ -20,6 +20,7 @@ interface ISearchableSelectSingleProps {
   placeholder?: string;
   isLoading?: boolean; // Optional prop for loading state
   isDisabled?: boolean; // Optional prop for disabled state
+  prefix?: string; // Optional prop for prefix
 }
 
 const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
@@ -30,6 +31,7 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
   placeholder,
   isLoading = false, // Default to false if not provided
   isDisabled = false, // Default to false if not provided
+  prefix = "",
 }: ISearchableSelectSingleProps) => {
   const [open, setOpen] = useState(false);
   
@@ -46,7 +48,7 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild disabled={isDisabled}>
         <Button variant="outline" size="sm" className="h-8 border border-gray-300">
-          {selectedOption ? selectedOption.label : (placeholder || title)}
+          {selectedOption ? prefix + selectedOption.label : (placeholder || title)}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0" align="start">
