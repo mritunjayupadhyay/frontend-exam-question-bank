@@ -10,6 +10,7 @@ export const ENDPOINTS = {
   },
   EXAM_PAPERS: {
     LIST: `${API_BASE_URL}/ex-p/exam-papers/filter`,
+    FULL_INFO: (id: string) => `${API_BASE_URL}/ex-p/exam-papers/${id}/full`,
     CREATE: `${API_BASE_URL}/ex-p/exam-papers`,
     DELETE: (id: string) => `${API_BASE_URL}/ex-p/exam-papers/${id}`,
   },

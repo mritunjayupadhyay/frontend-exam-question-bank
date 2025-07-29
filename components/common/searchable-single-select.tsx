@@ -34,9 +34,7 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
   prefix = "",
 }: ISearchableSelectSingleProps) => {
   const [open, setOpen] = useState(false);
-  
-  console.log("SearchableSelectSingle", { options, title, value, onChange });
-  
+    
   const selectedOption = options.find(option => option.value === value);
 
   const handleSelection = (selectedValue: ILabelValue) => {

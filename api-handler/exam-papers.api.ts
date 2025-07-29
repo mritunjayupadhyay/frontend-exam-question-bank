@@ -11,3 +11,11 @@ export const fetchExamPapers = async (
   const queryParams = getQueryParams(filter);
   return authenticatedFetch(queryParams ? `${url}?${queryParams}` : url);
 };
+
+export const fetchExamPaperById = async (
+  id: string,
+  authenticatedFetch: ReturnType<typeof createAuthenticatedFetch>
+): Promise<IExamPaperWithType> => {
+  const url = ENDPOINTS.EXAM_PAPERS.FULL_INFO(id);
+  return authenticatedFetch(url);
+}

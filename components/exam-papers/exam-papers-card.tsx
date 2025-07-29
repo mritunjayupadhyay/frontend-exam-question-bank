@@ -15,7 +15,6 @@ const ExamPaperCard: React.FC<ExamPaperCardProps> = ({ examPaper }) => {
     console.log("selectedExamPaper", examPaper);
     // go exam paper details page
     router.push('/exam-papers/' + examPaper.id);
-
   };
   return (
     <button
