@@ -16,8 +16,12 @@ import { z } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { TiptapEditor } from "@/components/common/tiptap-editor";
-import { DifficultyLevel, ICreateQuestionRequest, QuestionType } from "question-bank-interface";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import {
+  DifficultyLevel,
+  ICreateQuestionRequest,
+  QuestionType,
+} from "question-bank-interface";
+import { ChevronDown, ChevronUp, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -31,6 +35,7 @@ import { useCreateQuestion } from "@/react-query-hooks/hooks/use-questions";
 import { useSelector } from "react-redux";
 import { classSubjectState } from "@/rtk/slices/classSubject.slice";
 import GetClassSubject from "@/components/questions/get-claas-subject";
+import { toast } from "sonner";
 
 const questionOptionSchema = z.object({
   optionText: z.string().min(1, "Option text is required"),
@@ -87,14 +92,27 @@ const formSchema = z
     }
   );
 
+const DEFAULT_VALUES: FormValues = {
+  questionText: "",
+  marks: 1,
+  difficultyLevel: DifficultyLevel.LOW,
+  questionType: QuestionType.DESCRIPTIVE,
+  topicId: {
+    label: "",
+    value: "",
+  },
+  options: [],
+};
+
 type FormValues = z.infer<typeof formSchema>;
 
 export default function QuestionForm() {
   const [open, setOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   // const { data: subjects, isLoading: isLoadingSubjects } = useSubjects();
   // const { data: classes, isLoading: isLoadingClasses } = useClasses();
-
-    const { className, subject } = useSelector(classSubjectState);
+  const [editorKey, setEditorKey] = React.useState(0);
+  const { className, subject } = useSelector(classSubjectState);
 
   const createQuestionMutation = useCreateQuestion();
 
@@ -103,7 +121,7 @@ export default function QuestionForm() {
     defaultValues: {
       questionText: "",
       marks: 1,
-      difficultyLevel: undefined,
+      difficultyLevel: DifficultyLevel.LOW,
       questionType: QuestionType.DESCRIPTIVE,
       topicId: {
         label: "",
@@ -135,55 +153,113 @@ export default function QuestionForm() {
     remove(index);
   };
 
+  // Selective reset function - only reset question content, keep configuration
+  const resetForm = React.useCallback(() => {
+    // Only reset question text and options
+    form.setValue("questionText", "");
+    
+    // Clear all options
+    fields.forEach((_, index) => remove(index));
+    
+    // Clear all options first
+    while (fields.length > 0) {
+      remove(0);
+    }
+    
+    // If it's MCQ, add default options back immediately
+    // if (questionType === QuestionType.MULTIPLE_CHOICE) {
+    //   append({ optionText: "", isCorrect: false });
+    //   append({ optionText: "", isCorrect: false });
+    // }
+    
+    // Force TiptapEditor to re-render with empty content
+    setEditorKey(prev => prev + 1);
+  }, [form, fields, remove, append, questionType]);
+
+  // Form validation before submit
+  const validateForm = (): boolean => {
+    if (!(className?.id && subject?.id)) {
+      toast.error("Please select a class and subject first.");
+      return false;
+    }
+
+    if (questionType === QuestionType.MULTIPLE_CHOICE) {
+      if (!fields.length || fields.length < 2) {
+        toast.error("Multiple choice questions need at least 2 options.");
+        return false;
+      }
+      
+      const hasCorrectAnswer = fields.some((_, index) => 
+        form.getValues(`options.${index}.isCorrect`)
+      );
+      
+      if (!hasCorrectAnswer) {
+        toast.error("Please mark at least one option as correct.");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form submitted with values:", values);
 
-    if (!(className?.id && subject?.id)) {
-      return alert("Please select a class and subject first."); // Ensure class and subject
-    }
-    
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
     try {
       const submitData = {
-      ...values,
-      options:
-        values.questionType === QuestionType.MULTIPLE_CHOICE
-          ? values.options
-          : undefined,
-    };
+        ...values,
+        options:
+          values.questionType === QuestionType.MULTIPLE_CHOICE
+            ? values.options
+            : undefined,
+      };
       formSchema.parse(submitData);
-      const payload:ICreateQuestionRequest = {
+      const payload: ICreateQuestionRequest = {
         questionText: submitData.questionText,
         marks: submitData.marks,
         difficultyLevel: submitData.difficultyLevel,
         questionType: submitData.questionType,
-        subjectId: subject?.id,
+        subjectId: subject?.id as string,
         topicId: submitData.topicId.value,
-        classId: className?.id,
+        classId: className?.id as string,
         options: submitData.options?.map((option) => ({
           optionText: option.optionText,
           isCorrect: option.isCorrect,
         })),
-      }
+      };
       await createQuestionMutation.mutateAsync(payload);
-      // Here you would typically send the data to your API
-      console.log("Parsed data is valid:", submitData);
+      toast.success("Question has been created successfully!");
+      resetForm();
+      setOpen(false);
     } catch (error) {
-      console.error("Error parsing form data:", error);
-      form.setError("root", {
-        type: "manual",
-        message: "There was an error with the form submission. Please check your inputs.",
-      });
+      console.error("Error creating question:", error);
+      toast.error("Failed to create question. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
-    if (!(className?.id && subject?.id)) {
-      return <GetClassSubject />
+  // Auto-add options when switching to MCQ
+  React.useEffect(() => {
+    if (questionType === QuestionType.MULTIPLE_CHOICE && fields.length === 0) {
+      // Add 2 default options
+      append({ optionText: "", isCorrect: false });
+      append({ optionText: "", isCorrect: false });
     }
+  }, [questionType, fields.length, append]);
+
+  if (!(className?.id && subject?.id)) {
+    return <GetClassSubject />;
+  }
 
   return (
     <div className="mx-auto">
       <Form {...form}>
-        <div className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -268,43 +344,61 @@ export default function QuestionForm() {
                         </FormItem>
                       )}
                     />
-                     {/* Topic */}
-                    {subject?.id ?<FormField
-                      control={form.control}
-                      name="topicId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Topic *</FormLabel>
-                          <FormControl>
-                            <div>
-                              <SearchableSelectSingle
-                                options={(topics?.data || []).map((topic) => ({
-                                  value: topic.id,
-                                  label: topic.name,
-                                }))}
-                                title="Select topic"
+                    {/* Topic */}
+                    {subject?.id ? (
+                      <FormField
+                        control={form.control}
+                        name="topicId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Topic *</FormLabel>
+                            <FormControl>
+                              <div>
+                                <SearchableSelectSingle
+                                  options={(topics?.data || []).map(
+                                    (topic) => ({
+                                      value: topic.id,
+                                      label: topic.name,
+                                    })
+                                  )}
+                                  title="Select topic"
                                   value={field.value.value}
-                                onChange={field.onChange}
-                                placeholder={isLoadingTopics ? "Loading topics..." : "Select topic"}
-                                isLoading={isLoadingTopics}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />: null}
+                                  onChange={field.onChange}
+                                  placeholder={
+                                    isLoadingTopics
+                                      ? "Loading topics..."
+                                      : "Select topic"
+                                  }
+                                  isLoading={isLoadingTopics}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : null}
 
                     {/* Question Type */}
                   </div>
                 </div>
               ) : (
                 <div className="flex questions-center gap-2">
-                  {className.name && <Badge variant="label">Class: {className.name}</Badge>}
-                  {difficultyLevel && <Badge variant="label">Difficulty: {difficultyLevel}</Badge>}
-                  {topic.label && <Badge variant="label">Topic: {topic.label}</Badge>}
-                  {subject.name && <Badge variant="label">Subject: {subject.name}</Badge>}
-                  {questionMarks && <Badge variant="success">Marks: {questionMarks}</Badge>}
+                  {className.name && (
+                    <Badge variant="label">Class: {className.name}</Badge>
+                  )}
+                  {difficultyLevel && (
+                    <Badge variant="label">Difficulty: {difficultyLevel}</Badge>
+                  )}
+                  {topic.label && (
+                    <Badge variant="label">Topic: {topic.label}</Badge>
+                  )}
+                  {subject.name && (
+                    <Badge variant="label">Subject: {subject.name}</Badge>
+                  )}
+                  {questionMarks && (
+                    <Badge variant="success">Marks: {questionMarks}</Badge>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -349,6 +443,7 @@ export default function QuestionForm() {
                 <FormItem>
                   <FormControl>
                     <TiptapEditor
+                      key={editorKey}
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Write your question text here..."
@@ -496,22 +591,31 @@ export default function QuestionForm() {
             </Card>
           )}
           <div className="flex gap-3">
-            <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
-              Submit
+            <Button type="submit" 
+              disabled={isSubmitting}
+              className="flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Question"
+              )}
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                form.reset();
-                // Clear the options array
-                fields.forEach((_, index) => remove(index));
-              }}
+              onClick={resetForm}
+              disabled={isSubmitting}
+              className="flex items-center gap-2"
             >
+              <RotateCcw className="h-4 w-4" />
               Reset Form
             </Button>
           </div>
-        </div>
+        </form>
       </Form>
     </div>
   );
