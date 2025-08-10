@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 'use client';
 import ExamPaperCard from '@/components/exam-papers/exam-papers-card';
 import GetClassSubject from '@/components/questions/get-claas-subject';

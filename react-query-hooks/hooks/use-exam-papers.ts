@@ -1,7 +1,7 @@
 import { IExamPaperWithType, IQuestionFilter } from "question-bank-interface";
 import { useAuthenticatedFetch } from "./use-authenticated-fetch";
-import { useQuery } from "@tanstack/react-query";
-import { fetchExamPaperById, fetchExamPapers } from "@/api-handler/exam-papers.api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchExamPaperById, fetchExamPapers, createExamPaper, ICreateExamPaperRequest } from "@/api-handler/exam-papers.api";
 
 export function useExamPapers(filter: IQuestionFilter) {
   const authenticatedFetch = useAuthenticatedFetch(); // ✅ Clean and reusable
@@ -24,5 +24,17 @@ export function useExamPaperById(id: string) {
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     enabled: !!id,
+  });
+}
+
+export function useCreateExamPaper() {
+  const authenticatedFetch = useAuthenticatedFetch();
+  const queryClient = useQueryClient();
+  
+  return useMutation<IExamPaperWithType, Error, ICreateExamPaperRequest>({
+    mutationFn: (data: ICreateExamPaperRequest) => createExamPaper(data, authenticatedFetch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exam-papers'] });
+    },
   });
 }

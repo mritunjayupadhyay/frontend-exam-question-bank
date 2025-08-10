@@ -42,6 +42,13 @@ const SearchableSelectSingle: React.FC<ISearchableSelectSingleProps> = ({
     setOpen(false); // Close popover after selection
   };
 
+  if (title === "Select exam type" && !options.length) {
+      console.log("Selected value: Select exam type", selectedOption, options);
+
+  }
+    
+
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild disabled={isDisabled}>

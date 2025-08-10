@@ -22,5 +22,8 @@ export const ENDPOINTS = {
   },
   CLASSES: {
     LIST: `${API_BASE_URL}/qs/classes`,
+  },
+  EXAM_TYPES: {
+    LIST: `${API_BASE_URL}/ex-p/exam-types`,
   }
 };

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 import { ScrollArea } from "../ui/scroll-area";
 import { IQuestion } from "question-bank-interface";
