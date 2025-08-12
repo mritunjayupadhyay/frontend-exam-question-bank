@@ -11,9 +11,11 @@ import { Button } from "../ui/button";
 import { useDeleteQuestion, useQuestion } from "@/react-query-hooks/hooks/use-questions";
 import Image from "next/image";
 import { Checkbox } from "../ui/checkbox";
+import { useRouter } from "next/navigation";
 
 const QuestionView: React.FC = () => {
   const { selectedQuestion } = useSelector(questionsState);
+  const router = useRouter();
 
   const { data: questionDetails, isLoading } = useQuestion(
     selectedQuestion?.id
@@ -37,7 +39,13 @@ const QuestionView: React.FC = () => {
     console.log("Delete question with ID:", id);
     deleteQuestionMutation.mutate(id);
     dispatch(selectQuestion(null));
-  }
+  };
+
+  const editQuestion = () => {
+    if (selectedQuestion?.id) {
+      router.push(`/questions/${selectedQuestion.id}/edit`);
+    }
+  };
 
   if (!selectedQuestion) {
     return null;
@@ -57,11 +65,12 @@ const QuestionView: React.FC = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="link"
-          size="icon"
-          onClick={onSelectQuestion}
-        >
-          <Text type="lightText">Edit</Text>
-        </Button>
+            size="icon"
+            onClick={editQuestion}
+            className="cursor-pointer"
+          >
+            <Text type="lightText">Edit</Text>
+          </Button>
         <Button
             variant="destructive"
           size="sm"

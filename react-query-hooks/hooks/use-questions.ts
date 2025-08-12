@@ -2,7 +2,7 @@
 import { ICreateQuestionRequest, IQuestion, IQuestionFilter, IQuestionFullDetails } from 'question-bank-interface';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthenticatedFetch } from './use-authenticated-fetch';
-import { createQuestion, deleteQuestion, fetchQuestion, fetchQuestions } from '@/api-handler/questions.api';
+import { createQuestion, deleteQuestion, fetchQuestion, fetchQuestions, updateQuestion } from '@/api-handler/questions.api';
 
 export function useQuestions(filter: IQuestionFilter) {
   const authenticatedFetch = useAuthenticatedFetch(); // ✅ Clean and reusable
@@ -43,6 +43,25 @@ export function useCreateQuestion() {
     },
     onError: (error) => {
       console.error('Failed to create question:', error);
+      // Handle error (show toast, etc.)
+    },
+  });
+}
+
+export function useUpdateQuestion() {
+  const authenticatedFetch = useAuthenticatedFetch();
+  const queryClient = useQueryClient();
+  
+  return useMutation<{data: IQuestion, error: boolean}, Error, {id: string, payload: ICreateQuestionRequest}>({
+    mutationFn: ({id, payload}) => updateQuestion(id, payload, authenticatedFetch),
+    onSuccess: (response, variables) => {
+      // Invalidate and refetch questions list
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      queryClient.invalidateQueries({ queryKey: ['question', variables.id] });
+      console.log('Question updated successfully:', response.data, variables);
+    },
+    onError: (error) => {
+      console.error('Failed to update question:', error);
       // Handle error (show toast, etc.)
     },
   });

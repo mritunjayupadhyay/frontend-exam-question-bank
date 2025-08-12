@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,22 +18,19 @@ import {
   DifficultyLevel,
   ICreateQuestionRequest,
   QuestionType,
+  IQuestionFullDetails,
 } from "question-bank-interface";
-import { ChevronDown, ChevronUp, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2, Save } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import SearchableSelectSingle from "@/components/common/searchable-single-select";
 import { Badge } from "@/components/ui/badge";
-import { useSubjects } from "@/react-query-hooks/hooks/use-subjects";
-import { useClasses } from "@/react-query-hooks/hooks/use-classes";
 import { useTopics } from "@/react-query-hooks/hooks/use-topics";
-import { useCreateQuestion } from "@/react-query-hooks/hooks/use-questions";
-import { useSelector } from "react-redux";
-import { classSubjectState } from "@/rtk/slices/classSubject.slice";
-import GetClassSubject from "@/components/questions/get-claas-subject";
+import { useUpdateQuestion } from "@/react-query-hooks/hooks/use-questions";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const questionOptionSchema = z.object({
   optionText: z.string().min(1, "Option text is required"),
@@ -92,42 +87,35 @@ const formSchema = z
     }
   );
 
-const DEFAULT_VALUES: FormValues = {
-  questionText: "",
-  marks: 1,
-  difficultyLevel: DifficultyLevel.LOW,
-  questionType: QuestionType.DESCRIPTIVE,
-  topicId: {
-    label: "",
-    value: "",
-  },
-  options: [],
-};
-
 type FormValues = z.infer<typeof formSchema>;
 
-export default function QuestionForm() {
+interface QuestionEditFormProps {
+  questionDetails: IQuestionFullDetails;
+}
+
+export default function QuestionEditForm({ questionDetails }: QuestionEditFormProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  // const { data: subjects, isLoading: isLoadingSubjects } = useSubjects();
-  // const { data: classes, isLoading: isLoadingClasses } = useClasses();
-  const [editorKey, setEditorKey] = React.useState(0);
-  const { className, subject } = useSelector(classSubjectState);
+  const router = useRouter();
 
-  const createQuestionMutation = useCreateQuestion();
+  const updateQuestionMutation = useUpdateQuestion();
 
+  // Initialize form with existing question data
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      questionText: "",
-      marks: 1,
-      difficultyLevel: DifficultyLevel.LOW,
-      questionType: QuestionType.DESCRIPTIVE,
+      questionText: questionDetails.questionText || "",
+      marks: questionDetails.marks || 1,
+      difficultyLevel: (questionDetails.difficultyLevel as DifficultyLevel) || DifficultyLevel.LOW,
+      questionType: (questionDetails.questionType as QuestionType) || QuestionType.DESCRIPTIVE,
       topicId: {
-        label: "",
-        value: "",
+        label: questionDetails.topic || "",
+        value: questionDetails.topic || "",
       },
-      options: [],
+      options: questionDetails.questionOptions?.map(option => ({
+        optionText: option.optionText,
+        isCorrect: option.isCorrect,
+      })) || [],
     },
   });
 
@@ -140,10 +128,37 @@ export default function QuestionForm() {
   const questionText = form.watch("questionText");
   const questionMarks = form.watch("marks");
   const difficultyLevel = form.watch("difficultyLevel");
-  // const subject = form.watch("subjectId");
   const topic = form.watch("topicId");
 
-  const { data: topics, isLoading: isLoadingTopics } = useTopics(subject?.id);
+  const { data: topics, isLoading: isLoadingTopics, error: topicsError } = useTopics(questionDetails.subjectId);
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log("Topics debug:", {
+      subjectId: questionDetails.subjectId,
+      isLoadingTopics,
+      topicsData: topics?.data,
+      topicsLength: topics?.data?.length,
+      questionTopicId: questionDetails.topicId,
+      questionTopic: questionDetails.topic,
+      topicsError,
+      hasSubjectId: !!questionDetails.subjectId
+    });
+  }, [topics, isLoadingTopics, questionDetails.subjectId, questionDetails.topicId, questionDetails.topic, topicsError]);
+
+  // Update the topic field when topics are loaded and we have the topic data
+  React.useEffect(() => {
+    if (topics?.data && questionDetails.topicId && questionDetails.topic) {
+      const currentTopicValue = form.getValues("topicId");
+      // Only update if the current value is empty or doesn't match
+      if (!currentTopicValue.value || currentTopicValue.label !== questionDetails.topic) {
+        form.setValue("topicId", {
+          label: questionDetails.topic,
+          value: questionDetails.topicId,
+        });
+      }
+    }
+  }, [topics, questionDetails.topicId, questionDetails.topic, form]);
 
   const addOption = () => {
     // Validate existing options before adding new one
@@ -178,33 +193,8 @@ export default function QuestionForm() {
     });
   };
 
-  // Selective reset function - only reset question content, keep configuration
-  const resetForm = React.useCallback(() => {
-    console.log("Resetting form...");
-    
-    // Only reset question text and options
-    form.setValue("questionText", "");
-    
-    // Clear all options safely
-    const currentFieldsLength = fields.length;
-    for (let i = currentFieldsLength - 1; i >= 0; i--) {
-      remove(i);
-    }
-    
-    // Force TiptapEditor to re-render with empty content
-    setEditorKey(prev => prev + 1);
-    
-    console.log("Form reset completed");
-  }, [form, fields.length, remove, setEditorKey]);
-
   // Enhanced form validation before submit
   const validateForm = (): boolean => {
-    // Check class and subject selection
-    if (!(className?.id && subject?.id)) {
-      toast.error("Please select a class and subject first.");
-      return false;
-    }
-
     // Validate question text
     const questionTextValue = form.getValues("questionText");
     if (!questionTextValue || questionTextValue.trim().length === 0) {
@@ -327,9 +317,9 @@ export default function QuestionForm() {
         marks: submitData.marks,
         difficultyLevel: submitData.difficultyLevel,
         questionType: submitData.questionType,
-        subjectId: subject?.id as string,
+        subjectId: questionDetails.subjectId,
         topicId: submitData.topicId.value,
-        classId: className?.id as string,
+        classId: questionDetails.classId,
         options: submitData.options?.map((option) => ({
           optionText: option.optionText,
           isCorrect: option.isCorrect,
@@ -338,20 +328,24 @@ export default function QuestionForm() {
       
       console.log("Submitting payload:", payload);
       
-      const result = await createQuestionMutation.mutateAsync(payload);
-      console.log("Question creation result:", result);
+      const result = await updateQuestionMutation.mutateAsync({
+        id: questionDetails.id,
+        payload
+      });
+      console.log("Question update result:", result);
       
-      toast.success("Question has been created successfully!", {
+      toast.success("Question has been updated successfully!", {
         style: {
           background: "var(--Extended-Colors-On-Success-Container, #00D16B1A)",
           color: "var(--Extended-Colors-On-Success, #007F41)",
           border: "1px solid var(--Extended-Colors-On-Success, #007F41)",
         },
       });
-      resetForm();
-      setOpen(false);
+      
+      // Navigate back to questions list or details
+      router.push("/questions");
     } catch (error: unknown) {
-      console.error("Error creating question:", error);
+      console.error("Error updating question:", error);
       
       // Handle different types of errors with more specific checking
       if (error && typeof error === 'object') {
@@ -365,7 +359,7 @@ export default function QuestionForm() {
           if (axiosError.response?.data?.message) {
             toast.error(`Server error: ${axiosError.response.data.message}`);
           } else {
-            toast.error("Failed to create question. Please try again.");
+            toast.error("Failed to update question. Please try again.");
           }
         }
         // Check for generic error object
@@ -379,7 +373,7 @@ export default function QuestionForm() {
           toast.error(`Error: ${error.message}`);
         }
       } else {
-        toast.error("Failed to create question. Please try again.");
+        toast.error("Failed to update question. Please try again.");
       }
     } finally {
       console.log("Finally block executing, setting isSubmitting to false");
@@ -397,10 +391,6 @@ export default function QuestionForm() {
       }, 0);
     }
   }, [questionType, fields.length, append]);
-
-  if (!(className?.id && subject?.id)) {
-    return <GetClassSubject />;
-  }
 
   return (
     <div className="mx-auto">
@@ -456,8 +446,6 @@ export default function QuestionForm() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Marks */}
-
                     <FormField
                       control={form.control}
                       name="difficultyLevel"
@@ -490,58 +478,69 @@ export default function QuestionForm() {
                         </FormItem>
                       )}
                     />
+                    
                     {/* Topic */}
-                    {subject?.id ? (
-                      <FormField
-                        control={form.control}
-                        name="topicId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Topic *</FormLabel>
-                            <FormControl>
-                              <div>
-                                <SearchableSelectSingle
-                                  options={(topics?.data || []).map(
-                                    (topic) => ({
+                    <FormField
+                      control={form.control}
+                      name="topicId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Topic *</FormLabel>
+                          <FormControl>
+                            <div>
+                              <SearchableSelectSingle
+                                options={(topics?.data || []).map(
+                                  (topic) => {
+                                    console.log("Mapping topic:", topic);
+                                    return {
                                       value: topic.id,
                                       label: topic.name,
-                                    })
-                                  )}
-                                  title="Select topic"
-                                  value={field.value.value}
-                                  onChange={field.onChange}
-                                  placeholder={
-                                    isLoadingTopics
-                                      ? "Loading topics..."
-                                      : "Select topic"
+                                    };
                                   }
-                                  isLoading={isLoadingTopics}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    ) : null}
-
-                    {/* Question Type */}
+                                )}
+                                title="Select topic"
+                                value={field.value.value}
+                                onChange={(selectedTopic) => {
+                                  console.log("Topic selected:", selectedTopic);
+                                  field.onChange(selectedTopic);
+                                }}
+                                placeholder={
+                                  isLoadingTopics
+                                    ? "Loading topics..."
+                                    : topicsError
+                                    ? "Error loading topics"
+                                    : "Select topic"
+                                }
+                                isLoading={isLoadingTopics}
+                              />
+                              {topicsError && (
+                                <p className="text-sm text-red-500 mt-1">
+                                  Error loading topics: {topicsError.message}
+                                </p>
+                              )}
+                              {!isLoadingTopics && !topicsError && (!topics?.data || topics.data.length === 0) && (
+                                <p className="text-sm text-yellow-600 mt-1">
+                                  No topics found for this subject
+                                </p>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
               ) : (
                 <div className="flex questions-center gap-2">
-                  {className.name && (
-                    <Badge variant="label">Class: {className.name}</Badge>
-                  )}
+                  <Badge variant="label">Class: {questionDetails.className}</Badge>
                   {difficultyLevel && (
                     <Badge variant="label">Difficulty: {difficultyLevel}</Badge>
                   )}
                   {topic.label && (
                     <Badge variant="label">Topic: {topic.label}</Badge>
                   )}
-                  {subject.name && (
-                    <Badge variant="label">Subject: {subject.name}</Badge>
-                  )}
+                  <Badge variant="label">Subject: {questionDetails.subject}</Badge>
                   {questionMarks && (
                     <Badge variant="success">Marks: {questionMarks}</Badge>
                   )}
@@ -564,7 +563,7 @@ export default function QuestionForm() {
                     <FormControl>
                       <div className="flex items-center space-x-2">
                         <Switch
-                          id="airplane-mode"
+                          id="question-type-switch"
                           checked={field.value === QuestionType.MULTIPLE_CHOICE}
                           onCheckedChange={(checked) =>
                             field.onChange(
@@ -574,7 +573,7 @@ export default function QuestionForm() {
                             )
                           }
                         />
-                        <Label htmlFor="airplane-mode">MCQ</Label>
+                        <Label htmlFor="question-type-switch">MCQ</Label>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -589,7 +588,6 @@ export default function QuestionForm() {
                 <FormItem>
                   <FormControl>
                     <TiptapEditor
-                      key={editorKey}
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Write your question text here..."
@@ -665,9 +663,6 @@ export default function QuestionForm() {
                             </FormControl>
                             <div className="space-y-1 leading-none">
                               <FormLabel>Correct Answer</FormLabel>
-                              <FormDescription>
-                                Mark this option as correct
-                              </FormDescription>
                             </div>
                           </FormItem>
                         )}
@@ -699,6 +694,7 @@ export default function QuestionForm() {
               </CardContent>
             </Card>
           )}
+
           {questionText && (
             <Card>
               <CardHeader>
@@ -745,29 +741,33 @@ export default function QuestionForm() {
               </CardContent>
             </Card>
           )}
+
           <div className="flex gap-3">
-            <Button type="submit" 
+            <Button 
+              type="submit" 
               disabled={isSubmitting}
               className="flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Creating...
+                  Updating...
                 </>
               ) : (
-                "Create Question"
+                <>
+                  <Save className="h-4 w-4" />
+                  Update Question
+                </>
               )}
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={resetForm}
+              onClick={() => router.back()}
               disabled={isSubmitting}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
             >
-              <RotateCcw className="h-4 w-4" />
-              Reset Form
+              Cancel
             </Button>
           </div>
         </form>

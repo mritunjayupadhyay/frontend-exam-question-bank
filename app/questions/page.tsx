@@ -67,7 +67,10 @@ const QuestionsPage = () => {
     >
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel>
-          <div className="flex flex-col w-full items-start gap-4 flex-1 self-stretch">
+          <div 
+            className="flex flex-col w-full items-start gap-4 flex-1 self-stretch"
+            style={{ paddingRight: selectedQuestion?.id ? '10px' : '0' }}
+          >
             {/* <Text type="section-header">Questions of {subject?.name} for Class {className?.name} </Text> */}
             <QuestionFilter />
             {isLoading ? <div>Loading...</div> : <QuestionList questions={questionsRes?.data || []} />}
